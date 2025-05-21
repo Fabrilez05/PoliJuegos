@@ -18,6 +18,11 @@ class Juego:
         self.letrasJugables: list = []
         self.diccionario = 'diccionario.txt'
         self.letraGenerada: str = ''
+        self.palabrasCorrectas: list = []
+        self.letrasIniciales: list = {}
+        self.palabrasPorLetra: list = {}
+
+        
     
     def generarLetra(self) -> str:
         letrasPeso = []
@@ -57,6 +62,43 @@ class Juego:
         if len(self.palabras) > 100:
             self.palabras = random.sample(self.palabras, 100)
 
+    def checkearPalabra(self,entrada:str) ->str:
+        stringSalida = ''
+        if len(entrada) < 3:
+            stringSalida = 'la palabra es muy corta'
+        elif self.letraGenerada not in entrada:
+            stringSalida = f"la letra {self.letraGenerada}, no se encuentra en la palabra"
+        elif entrada not in self.palabras:
+            stringSalida = f'la palabra {entrada} no se encuentra en el diccionario'
+        elif entrada in self.palabrasCorrectas:
+            stringSalida = f'la palabra {entrada} ya fue enviada'
+        else:
+            stringSalida = f'la palabra es correcta: {entrada} '
+            self.palabrasCorrectas.append(entrada)
+            inicial = entrada[0]
+            if inicial in self.letrasIniciales:
+                self.letrasIniciales[inicial] += 1
+                
+
+        return stringSalida
+
+    def guardarLetrasIniciales(self):
+        self.letrasIniciales: list = {}
+        self.palabrasPorLetra: list = {}
+
+        for palabra in self.palabras:
+            if palabra:
+                inicial = palabra[0]
+                if inicial not in self.letrasIniciales:
+                    self.letrasIniciales[inicial] = 0
+                    self.palabrasPorLetra[inicial] = []
+                self.palabrasPorLetra[inicial].append(palabra)
+        
+        for inicial in self.palabrasPorLetra:
+            self.letrasIniciales[inicial] =  0
+
+
+
 
 
 class pilaEntrada:
@@ -80,6 +122,7 @@ class pilaEntrada:
     
     def empty(self):
         self.pila.clear()
+
 
 
 
