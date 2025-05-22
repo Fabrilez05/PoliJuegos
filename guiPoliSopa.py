@@ -1,6 +1,7 @@
 import pygame
 import sys
 import time
+import os
 from logicaPoliSopa import PoliSopa, cargar_diccionario, seleccionar_palabras
 
 # --- Configuración ---
@@ -15,10 +16,89 @@ FUENTE_SIZE = 32
 pygame.init()
 fuente = pygame.font.SysFont(None, FUENTE_SIZE)
 
-diccionario = cargar_diccionario("diccPoliSopa.txt")
-palabras = seleccionar_palabras(diccionario)
-print("Palabras a encontrar:", palabras)
-juego = PoliSopa(palabras, filas=8, columnas=10)
+usuario_actual = sys.argv[1] if len(sys.argv) > 1 else "anonimo"
+indice_partida = int(sys.argv[2]) if len(sys.argv) > 2 else None
+
+def cargar_partida(nombre_archivo="registroSopa.txt", usuario=None, indice=0):
+    import os
+    if not os.path.exists(nombre_archivo):
+        return None
+    with open(nombre_archivo, "r", encoding="utf-8") as f:
+        contenido = f.read().split("=== PARTIDA ===")
+        partidas = []
+        for p in contenido:
+            lineas = [line.strip() for line in p.strip().splitlines() if line.strip()]
+            if lineas and lineas[0].startswith("USUARIO:"):
+                user = lineas[0].split(":",1)[1]
+                if user == usuario:
+                    partidas.append(lineas)
+        if not partidas or indice is None or indice >= len(partidas):
+            return None
+        datos = partidas[indice]
+        i = 1  # Saltar línea de usuario
+        # Buscar la línea de dimensiones
+        while i < len(datos) and (not datos[i] or ',' not in datos[i]):
+            i += 1
+        if i >= len(datos):
+            return None
+        filas, columnas = map(int, datos[i].split(","))
+        i += 1
+        tablero = []
+        while i < len(datos) and datos[i] and not datos[i].startswith("PALABRAS:"):
+            tablero.append(list(datos[i]))
+            i += 1
+        while i < len(datos) and not datos[i].startswith("PALABRAS:"):
+            i += 1
+        i += 1
+        palabras_cargar = []
+        while i < len(datos) and datos[i] and not datos[i].startswith("ENCONTRADAS:"):
+            palabras_cargar.append(datos[i])
+            i += 1
+        while i < len(datos) and not datos[i].startswith("ENCONTRADAS:"):
+            i += 1
+        i += 1
+        palabras_encontradas_cargar = []
+        while i < len(datos) and datos[i] and not datos[i].startswith("TIEMPO:"):
+            palabras_encontradas_cargar.append(datos[i])
+            i += 1
+        while i < len(datos) and not datos[i].startswith("TIEMPO:"):
+            i += 1
+        # Buscar la línea de tiempo
+        tiempo_cargar = 0
+        if i < len(datos):
+            tiempo_line = datos[i]
+            if ":" in tiempo_line:
+                try:
+                    tiempo_cargar = int(tiempo_line.split(":")[1].strip())
+                except ValueError:
+                    tiempo_cargar = 0
+            elif i+1 < len(datos) and datos[i+1].isdigit():
+                tiempo_cargar = int(datos[i+1].strip())
+        return filas, columnas, tablero, palabras_cargar, palabras_encontradas_cargar, tiempo_cargar
+
+if indice_partida is not None:
+    partida = cargar_partida(nombre_archivo="registroSopa.txt", usuario=usuario_actual, indice=indice_partida)
+    if partida:
+        filas, columnas, tablero, palabras, palabras_encontradas, tiempo_guardado = partida
+        juego = PoliSopa(palabras, filas=filas, columnas=columnas)
+        juego.tablero = tablero
+        palabras_encontradas = palabras_encontradas
+        tiempo_inicio = time.time() - tiempo_guardado  # <-- Aquí cargas el tiempo correctamente
+    else:
+        # Si no se pudo cargar, inicia nueva partida
+        diccionario = cargar_diccionario("diccPoliSopa.txt")
+        palabras = seleccionar_palabras(diccionario)
+        print("Palabras a encontrar:", palabras)
+        juego = PoliSopa(palabras, filas=8, columnas=10)
+        palabras_encontradas = []
+        tiempo_inicio = time.time()
+else:
+    diccionario = cargar_diccionario("diccPoliSopa.txt")
+    palabras = seleccionar_palabras(diccionario)
+    print("Palabras a encontrar:", palabras)
+    juego = PoliSopa(palabras, filas=8, columnas=10)
+    palabras_encontradas = []
+    tiempo_inicio = time.time()
 
 # --- Dimensiones ventana ---
 ancho = juego.columnas * (ANCHO_CASILLA + MARGEN) + 700
@@ -29,10 +109,8 @@ pygame.display.set_caption("PoliSopa")
 
 # --- Variables de estado ---
 seleccionadas = []
-palabras_encontradas = []
 
 clock = pygame.time.Clock()
-tiempo_inicio = time.time()
 
 def dibujar_tablero():
     for i in range(juego.filas):
@@ -131,24 +209,85 @@ def mostrar_tabla_progreso():
             pantalla.blit(img, (x + tam_celda//2 - img.get_width()//2, y + tam_celda//2 - img.get_height()//2))
         y0 += tam_celda + espacio_y
 
-def guardar_partida(nombre_archivo="registroSopa.txt"):
+def guardar_partida(nombre_archivo="registroSopa.txt", usuario=None, indice=None, nombre_partida=None):
+    # Lee todas las partidas
+    if not os.path.exists(nombre_archivo):
+        partidas = []
+    else:
+        with open(nombre_archivo, "r", encoding="utf-8") as f:
+            contenido = f.read().split("=== PARTIDA ===")
+            partidas = [p for p in contenido if p.strip()]
+    # Construye el nuevo registro
+    registro = "USUARIO:{}\n".format(usuario)
+    if nombre_partida:
+        registro += "NOMBRE:{}\n".format(nombre_partida)
+    registro += f"{juego.filas},{juego.columnas}\n"
+    for fila in juego.tablero:
+        registro += ''.join(fila) + "\n"
+    registro += "PALABRAS:\n"
+    for palabra in palabras:
+        registro += palabra + "\n"
+    registro += "ENCONTRADAS:\n"
+    for palabra in palabras_encontradas:
+        registro += palabra + "\n"
+    tiempo_actual = int(time.time() - tiempo_inicio)
+    registro += f"TIEMPO:{tiempo_actual}\n"
+    registro += "=== FIN PARTIDA ===\n\n"
+    # Si es sobrescritura, reemplaza la partida correspondiente
+    if indice is not None and 0 <= indice < len(partidas):
+        partidas[indice] = registro
+    else:
+        partidas.append(registro)
+    # Guarda todas las partidas
     with open(nombre_archivo, "w", encoding="utf-8") as f:
-        # Guardar dimensiones
-        f.write(f"{juego.filas},{juego.columnas}\n")
-        # Guardar tablero
-        for fila in juego.tablero:
-            f.write(''.join(fila) + "\n")
-        # Guardar palabras a buscar
-        f.write("PALABRAS:\n")
-        for palabra in palabras:
-            f.write(palabra + "\n")
-        # Guardar palabras encontradas
-        f.write("ENCONTRADAS:\n")
-        for palabra in palabras_encontradas:
-            f.write(palabra + "\n")
-        # Guardar tiempo transcurrido
-        tiempo_actual = int(time.time() - tiempo_inicio)
-        f.write(f"TIEMPO:\n{tiempo_actual}\n")
+        for p in partidas:
+            f.write("=== PARTIDA ===\n" + p)
+
+def pedir_nombre_partida(main_size):
+    import pygame
+    ventana = pygame.display.set_mode((400, 180))
+    fuente = pygame.font.SysFont(None, 32)
+    input_box = pygame.Rect(50, 60, 300, 40)
+    boton_guardar = pygame.Rect(150, 120, 100, 40)
+    color_inactive = pygame.Color('lightskyblue3')
+    color_active = pygame.Color('dodgerblue2')
+    color = color_inactive
+    active = False
+    text = ''
+    done = False
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return "SinNombre"
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if input_box.collidepoint(event.pos):
+                    active = True
+                else:
+                    active = False
+                color = color_active if active else color_inactive
+                if boton_guardar.collidepoint(event.pos):
+                    done = True
+            if event.type == pygame.KEYDOWN and active:
+                if event.key == pygame.K_RETURN:
+                    done = True
+                elif event.key == pygame.K_BACKSPACE:
+                    text = text[:-1]
+                else:
+                    if len(text) < 20:
+                        text += event.unicode
+        ventana.fill((240,240,240))
+        txt_surface = fuente.render("Nombre de la partida:", True, (0,0,0))
+        ventana.blit(txt_surface, (50, 20))
+        pygame.draw.rect(ventana, color, input_box, 2)
+        txt_surface2 = fuente.render(text, True, (0,0,0))
+        ventana.blit(txt_surface2, (input_box.x+5, input_box.y+8))
+        pygame.draw.rect(ventana, (100,180,100), boton_guardar)
+        txt_guardar = fuente.render("Guardar", True, (255,255,255))
+        ventana.blit(txt_guardar, (boton_guardar.x + boton_guardar.w//2 - txt_guardar.get_width()//2, boton_guardar.y + 8))
+        pygame.display.flip()
+    # Restaura la ventana principal
+    pygame.display.set_mode(main_size)
+    return text if text else "SinNombre"
 
 # --- Main loop ---
 if __name__ == "__main__":
@@ -180,7 +319,10 @@ if __name__ == "__main__":
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if rect_guardar.collidepoint(event.pos):
-                    guardar_partida()
+                    # Antes de pedir el nombre, guarda el tamaño de la ventana principal
+                    main_size = pantalla.get_size()
+                    nombre_partida = pedir_nombre_partida(main_size)
+                    guardar_partida(nombre_archivo="registroSopa.txt", usuario=usuario_actual, indice=indice_partida, nombre_partida=nombre_partida)
                     print("Partida guardada en registroSopa.txt")
                 elif rect_borrar.collidepoint(event.pos):
                     seleccionadas.clear()
