@@ -63,7 +63,7 @@ def menu_Main():
         PANTALLA_ALTO // 2 - botonAlto - espacio_vertical // 2,
         botonAncho,
         botonAlto,
-        "Jugar PoliPalabras",
+        "Poli Juegos",
         COLOR_BOTON,
         COLOR_BOTON_HOVER
     )
