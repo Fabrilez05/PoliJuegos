@@ -1,0 +1,12 @@
+=== PARTIDA ===
+USUARIO:yoprolezpy
+NOMBRE:HOLA MUNDO
+LETRA_GENERADA:s
+LETRAS_JUGABLES:s,u,o,j,i,a,q
+PALABRAS_DICCIONARIO:osa,sosa,sij,uso,sus,oso,quisa,saja,jijas,ososo,sosias,oasis,jasa,asa,quis,josa,soso,siu,jusi,ojoso,sao,aisa,asuso,sosia,suso,soja,sisa,isa
+PALABRAS_CORRECTAS:quis,oso,osa,sosa,soso
+TIEMPO:42
+LETRAS_INICIALES:o:2,s:2,u:0,q:1,j:0,a:0,i:0
+PALABRAS_POR_LETRA:o:osa|oso|ososo|oasis|ojoso,s:sosa|sij|sus|saja|sosias|soso|siu|sao|sosia|suso|soja|sisa,u:uso,q:quisa|quis,j:jijas|jasa|josa|jusi,a:asa|aisa|asuso,i:isa
+=== FIN PARTIDA ===
+
