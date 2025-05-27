@@ -1,91 +1,95 @@
 import random
 
-def seleccionar_palabras(diccionario):
-    palabras6 = [p for p in diccionario if len(p) == 6]
-    palabras7 = [p for p in diccionario if len(p) == 7]
-    palabras8 = [p for p in diccionario if len(p) == 8]
-    palabras9 = [p for p in diccionario if len(p) == 9]
-    seleccionadas = (
-        random.sample(palabras6, 3) +
-        random.sample(palabras7, 2) +
-        random.sample(palabras8, 1) +
-        random.sample(palabras9, 1)
-    )
-    random.shuffle(seleccionadas)
-    return [p.upper() for p in seleccionadas]
+DIRS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
-def cargar_diccionario(ruta):
-    with open(ruta, encoding="utf-8") as f:
-        return [line.strip() for line in f if line.strip()]
+def es_adyacente(a, b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1]) == 1
+
+def insertar_palabra(tablero, palabra, camino):
+    for letra, (fila, col) in zip(palabra, camino):
+        tablero[fila][col] = letra
+
+def colocar_primera_palabra(tablero, palabra, filas, columnas):
+    for _ in range(500):
+        fila, col = random.randint(0, filas - 1), random.randint(0, columnas - 1)
+        camino = [(fila, col)]
+        visitado = {(fila, col)}
+        for _ in range(1, len(palabra)):
+            vecinos = [(fila + dr, col + dc) for dr, dc in DIRS
+                       if 0 <= fila + dr < filas and 0 <= col + dc < columnas and (fila + dr, col + dc) not in visitado]
+            if not vecinos:
+                break
+            fila, col = random.choice(vecinos)
+            camino.append((fila, col))
+            visitado.add((fila, col))
+        if len(camino) == len(palabra):
+            insertar_palabra(tablero, palabra, camino)
+            return camino
+    return None
+
+def buscar_camino(palabra, tablero, filas, columnas):
+    def backtrack(i, fila, col, visitado):
+        if i == len(palabra):
+            return []
+        if not (0 <= fila < filas and 0 <= col < columnas):
+            return None
+        if (fila, col) in visitado:
+            return None
+        if tablero[fila][col] not in ('', palabra[i]):
+            return None
+        visitado.add((fila, col))
+        if i == len(palabra) - 1:
+            return [(fila, col)]
+        vecinos = [(fila + dr, col + dc) for dr, dc in DIRS
+                   if 0 <= fila + dr < filas and 0 <= col + dc < columnas and (fila + dr, col + dc) not in visitado]
+        # Prioriza vecinos con coincidencia de letra
+        vecinos.sort(key=lambda pos: tablero[pos[0]][pos[1]] == palabra[i+1], reverse=True)
+        for nf, nc in vecinos:
+            res = backtrack(i + 1, nf, nc, visitado.copy())
+            if res is not None:
+                return [(fila, col)] + res
+        return None
+
+    posiciones_candidatas = [(r, c) for r in range(filas) for c in range(columnas) if tablero[r][c] in ('', palabra[0])]
+    random.shuffle(posiciones_candidatas)
+    for fila, col in posiciones_candidatas[:50]:
+        camino = backtrack(0, fila, col, set())
+        if camino and len(camino) == len(palabra):
+            return camino
+    return []
 
 class PoliSopa:
-    def __init__(self, palabras, filas=5, columnas=6):  # Cambiado a 5x6
+    def __init__(self, palabras, filas=5, columnas=6):
         self.filas = filas
         self.columnas = columnas
         self.palabras = palabras
         self.tablero = [['' for _ in range(columnas)] for _ in range(filas)]
         self.posiciones_palabras = {}  # {palabra: [(fila, col), ...]}
-        self.colocar_palabras()
+        self.crear_tablero()
         self.rellenar_tablero()
 
-    def colocar_palabras(self):
-        # Ordena las palabras de mayor a menor longitud
-        palabras_ordenadas = sorted(self.palabras, key=len, reverse=True)
-        while True:  # Sin límite de intentos
-            self.tablero = [['' for _ in range(self.columnas)] for _ in range(self.filas)]
-            self.posiciones_palabras = {}
+    def crear_tablero(self):
+        palabras = sorted(self.palabras, key=len, reverse=True)
+        while True:  # Bucle infinito hasta que se logre
+            tablero = [['' for _ in range(self.columnas)] for _ in range(self.filas)]
+            soluciones = {}
+            camino = colocar_primera_palabra(tablero, palabras[0], self.filas, self.columnas)
+            if not camino:
+                continue
+            soluciones[palabras[0]] = camino
             exito = True
-            for palabra in palabras_ordenadas:
-                for _ in range(300):  # Más intentos por palabra
-                    camino = self.buscar_camino_para_palabra(palabra)
-                    if camino:
-                        for (f, c), letra in zip(camino, palabra):
-                            self.tablero[f][c] = letra
-                        self.posiciones_palabras[palabra] = camino
-                        break
+            for palabra in palabras[1:]:
+                camino = buscar_camino(palabra, tablero, self.filas, self.columnas)
+                if camino and len(camino) == len(palabra):
+                    insertar_palabra(tablero, palabra, camino)
+                    soluciones[palabra] = camino
                 else:
                     exito = False
                     break
             if exito:
-                break
-
-    def buscar_camino_para_palabra(self, palabra):
-        # Busca un camino ortogonal aleatorio para la palabra
-        for _ in range(100):
-            f = random.randint(0, self.filas-1)
-            c = random.randint(0, self.columnas-1)
-            if self.tablero[f][c] not in ('', palabra[0]):
-                continue
-            camino = [(f, c)]
-            if self._camino_recursivo(f, c, palabra, 1, set([(f, c)]), camino):
-                return camino
-        return None
-
-    def _camino_recursivo(self, f, c, palabra, idx, visitados, camino):
-        if idx == len(palabra):
-            return True
-        vecinos = self.vecinos_ortogonales(f, c)
-        random.shuffle(vecinos)
-        for nf, nc in vecinos:
-            if (nf, nc) in visitados:
-                continue
-            if self.tablero[nf][nc] not in ('', palabra[idx]):
-                continue
-            visitados.add((nf, nc))
-            camino.append((nf, nc))
-            if self._camino_recursivo(nf, nc, palabra, idx+1, visitados, camino):
-                return True
-            camino.pop()
-            visitados.remove((nf, nc))
-        return False
-
-    def vecinos_ortogonales(self, f, c):
-        vecinos = []
-        for df, dc in [(-1,0), (1,0), (0,-1), (0,1)]:
-            nf, nc = f+df, c+dc
-            if 0 <= nf < self.filas and 0 <= nc < self.columnas:
-                vecinos.append((nf, nc))
-        return vecinos
+                self.tablero = tablero
+                self.posiciones_palabras = soluciones
+                return
 
     def rellenar_tablero(self):
         for i in range(self.filas):
@@ -96,6 +100,23 @@ class PoliSopa:
     def mostrar(self):
         for fila in self.tablero:
             print(' '.join(fila))
+
+def cargar_diccionario(ruta):
+    # Devuelve una lista de palabras en mayúsculas desde un archivo de texto (una palabra por línea)
+    with open(ruta, encoding="utf-8") as f:
+        return [linea.strip().upper() for linea in f if linea.strip()]
+
+def seleccionar_palabras(diccionario):
+    # Selecciona 7 palabras aleatorias de longitud >= 6 y <= 9
+    candidatas = [p for p in diccionario if 6 <= len(p) <= 9]
+    random.shuffle(candidatas)
+    seleccionadas = []
+    # 3 de 6 letras, 2 de 7, 1 de 8, 1 de 9 (ajusta si no hay suficientes)
+    seleccionadas += [p for p in candidatas if len(p) == 6][:3]
+    seleccionadas += [p for p in candidatas if len(p) == 7][:2]
+    seleccionadas += [p for p in candidatas if len(p) == 8][:1]
+    seleccionadas += [p for p in candidatas if len(p) == 9][:1]
+    return seleccionadas
 
 if __name__ == "__main__":
     diccionario = cargar_diccionario("diccPoliSopa.txt")

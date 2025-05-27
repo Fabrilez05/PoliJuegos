@@ -32,11 +32,20 @@ def obtener_partidas_usuario(registro, usuario):
     if not os.path.exists(registro):
         return []
     with open(registro, "r", encoding="utf-8") as f:
-        contenido = f.read().split("=== PARTIDA ===\n")
+        contenido = f.read().split("=== PARTIDA ===")
         partidas = []
         for idx, p in enumerate(contenido):
-            if p.strip().startswith(f"USUARIO:{usuario}"):
-                partidas.append(f"Partida {idx+1}")
+            lineas = [line.strip() for line in p.strip().splitlines() if line.strip()]
+            if lineas and lineas[0].startswith(f"USUARIO:{usuario}"):
+                # Busca el nombre personalizado
+                nombre = None
+                for line in lineas:
+                    if line.startswith("NOMBRE:"):
+                        nombre = line.split(":",1)[1].strip()
+                        break
+                if not nombre:
+                    nombre = f"Partida {idx+1}"
+                partidas.append(nombre)
         return partidas
 
 def ventana_lista_partidas(partidas):

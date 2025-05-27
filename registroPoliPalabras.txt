@@ -1,4 +1,5 @@
 === PARTIDA ===
+
 USUARIO:yoprolezpy
 NOMBRE:HOLA MUNDO
 LETRA_GENERADA:s
@@ -8,5 +9,16 @@ PALABRAS_CORRECTAS:quis,oso,osa,sosa,soso
 TIEMPO:42
 LETRAS_INICIALES:o:2,s:2,u:0,q:1,j:0,a:0,i:0
 PALABRAS_POR_LETRA:o:osa|oso|ososo|oasis|ojoso,s:sosa|sij|sus|saja|sosias|soso|siu|sao|sosia|suso|soja|sisa,u:uso,q:quisa|quis,j:jijas|jasa|josa|jusi,a:asa|aisa|asuso,i:isa
+=== FIN PARTIDA ===
+
+=== PARTIDA ===
+USUARIO:ale
+NOMBRE:adsdaLETRA_GENERADA:l
+LETRAS_JUGABLES:l,s,d,m,u,a,o
+PALABRAS_DICCIONARIO:lodo,alosa,alada,mol,alado,molla,olma,molso,amolado,salso,luma,lamoso,llamado,lodoso,lulo,ludo,ulua,modal,dala,musola,amol,malulo,soldado,sasal,lado,salsa,mal,adsl,solado,mula,aluda,alama,salol,lada,salado,ala,saludo,mamola,lolo,usual,adula,dolado,lomoso,lomudo,olla,adul,sollado,moloso,lsd,almo,mulo,losa,maslo,mallo,lomo,llama,dolo,dolama,molo,saluda,alamud,dalla,sulla,losado,alauda,doloso,llosa,olmo,alud,sollo,ludada,almud,loa,mala,mauloso,alma,dula,sol,ulala,moduloso,sal,salamo,adala,ollado,las,molsa,mola,ola,mullo,lama,lomada,llosa,loma,laso,malla,salma,salmo,almudada,sala,amolada
+PALABRAS_CORRECTAS:
+TIEMPO:11
+LETRAS_INICIALES:l:0,a:0,m:0,o:0,s:0,u:0,d:0
+PALABRAS_POR_LETRA:l:lodo|luma|lamoso|llamado|lodoso|lulo|ludo|lado|lada|lolo|lomoso|lomudo|lsd|losa|lomo|llama|losado|llosa|ludada|loa|las|lama|lomada|llosa|loma|laso,a:alosa|alada|alado|amolado|amol|adsl|aluda|alama|ala|adula|adul|almo|alamud|alauda|alud|almud|alma|adala|almudada|amolada,m:mol|molla|molso|modal|musola|malulo|mal|mula|mamola|moloso|mulo|maslo|mallo|molo|mala|mauloso|moduloso|molsa|mola|mullo|malla,o:olma|olla|olmo|ollado|ola,s:salso|soldado|sasal|salsa|solado|salol|salado|saludo|sollado|saluda|sulla|sollo|sol|sal|salamo|salma|salmo|sala,u:ulua|usual|ulala,d:dala|dolado|dolo|dolama|dalla|doloso|dula
 === FIN PARTIDA ===
 
