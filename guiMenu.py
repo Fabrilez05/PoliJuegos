@@ -77,6 +77,8 @@ def menu_Main():
         COLOR_BOTON_HOVER
     )
 
+    boton_cerrar = pygame.Rect(20, 60, 160, 40)
+
     ejecutar = True
 
     while ejecutar:
@@ -118,6 +120,14 @@ def menu_Main():
                     print(f"Error al ejecutar el juego: {e}")
                 return
                 
+            if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
+                if boton_cerrar.collidepoint(evento.pos):
+                    pygame.quit()
+                    dirScript = os.path.dirname(os.path.abspath(__file__))
+                    pathLogin = os.path.join(dirScript, "guiLogIn.py")
+                    subprocess.run([sys.executable, pathLogin])
+                    sys.exit()
+
         botonJugarPolipalabras.checkHover(posMouse)
         botonPolisopa.checkHover(posMouse)
 
@@ -134,6 +144,11 @@ def menu_Main():
         if usuario_actual:
             texto_usuario = fuenteUsuario.render(f"Usuario: {usuario_actual}", True, (0,0,0))
             pantalla.blit(texto_usuario, (20, 20))
+            pygame.draw.rect(pantalla, (180, 100, 100), boton_cerrar)
+            fuente_boton = pygame.font.SysFont(None, 28)
+            txt_cerrar = fuente_boton.render("Cerrar sesión", True, (255,255,255))
+            pantalla.blit(txt_cerrar, (boton_cerrar.x + boton_cerrar.w//2 - txt_cerrar.get_width()//2,
+                                   boton_cerrar.y + boton_cerrar.h//2 - txt_cerrar.get_height()//2))
 
         pygame.display.flip()
 
