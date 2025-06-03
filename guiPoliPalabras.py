@@ -602,6 +602,47 @@ class juegoUI:
         self.mensaje = f"Pista generada"
         self.mensajeTemp = pygame.time.get_ticks()
 
+    def mostrar_ventana_victoria(self):
+        # Cargar imagen de victoria
+        corona_img = pygame.image.load("coronaganar.png")
+        corona_img = pygame.transform.scale(corona_img, (120, 120))
+
+        ventana = pygame.display.set_mode((400, 300))
+        fuente_local = pygame.font.SysFont("Arial", 32)
+        fuente_puntaje = pygame.font.SysFont("Arial", 26)
+        boton_menu = pygame.Rect(120, 220, 160, 50)
+
+        # Calcula el puntaje total logrado
+        total_puntos = sum(self.juego.puntajes_palabras.get(p, 0) for p in self.juego.palabrasCorrectas)
+
+        esperando = True
+        while esperando:
+            ventana.fill((255, 255, 255))
+            ventana.blit(corona_img, (140, 40))
+            texto = fuente_local.render("¡Ganaste!", True, (0, 120, 0))
+            ventana.blit(texto, (200 - texto.get_width()//2, 170))
+
+            # Mostrar puntaje logrado
+            texto_puntaje = fuente_puntaje.render(f"Puntaje: {total_puntos}", True, (0, 100, 0))
+            ventana.blit(texto_puntaje, (200 - texto_puntaje.get_width()//2, 200))
+
+            pygame.draw.rect(ventana, (70, 130, 180), boton_menu, border_radius=8)
+            pygame.draw.rect(ventana, (40, 80, 120), boton_menu, 2, border_radius=8)
+            txt_menu = fuente_local.render("Menú Principal", True, (255,255,255))
+            ventana.blit(txt_menu, (boton_menu.x + boton_menu.width//2 - txt_menu.get_width()//2, boton_menu.y + 10))
+
+            pygame.display.flip()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if boton_menu.collidepoint(event.pos):
+                        pygame.display.set_mode((PANTALLA_ANCHO, PANTALLA_ALTO))
+                        os.system(f"python guiMenu.py {usuario_actual}")
+                        pygame.quit()
+                        sys.exit()
+
 def main():
     juego = logicaPoliPalabras.Juego()
     if indice_partida is not None:
@@ -625,10 +666,10 @@ def main():
         juego.letraGenerada = juego.generarLetra()
         juego.generarLetrasJugables()
         juego.obtenerPalabras()
-        juego.disminuirPalabras()
+        juego.disminuirPalabras(20)
         juego.guardarLetrasIniciales()
         print(juego.palabras)
-        print(len(juego.palabras))
+        
 
     # Initialize UI with the game state
     UIjuego = juegoUI(juego)
@@ -649,8 +690,15 @@ def main():
         UIjuego.dibujar(pantalla)
         pygame.display.flip()
         reloj.tick(60)
+
+        if len(UIjuego.juego.palabrasCorrectas) == len(UIjuego.juego.palabras) and len(UIjuego.juego.palabras) > 0:
+            UIjuego.mostrar_ventana_victoria()
+
+        
     pygame.quit()
     sys.exit()
 
 if __name__ == "__main__":
     main()
+
+

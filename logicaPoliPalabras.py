@@ -27,7 +27,7 @@ class Juego:
         self.palabrasCorrectas: list = []
         self.letrasIniciales: list = {}
         self.palabrasPorLetra: list = {}
-        self.puntajes_palabras: dict = {}  # <-- Nuevo diccionario para puntajes
+        self.puntajes_palabras: dict = {}  
 
         
     
@@ -65,9 +65,9 @@ class Juego:
                     if len(self.palabras) >= 100:
                         break
     
-    def disminuirPalabras(self) -> None:
-        if len(self.palabras) > 20:
-            self.palabras = random.sample(self.palabras, 20)
+    def disminuirPalabras(self,cantPalabras) -> None:
+        if len(self.palabras) > cantPalabras:
+            self.palabras = random.sample(self.palabras, cantPalabras)
         
 
     def checkearPalabra(self,entrada:str) ->str:
