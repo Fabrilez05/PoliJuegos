@@ -1,5 +1,7 @@
 === PARTIDA ===
 
+
+
 USUARIO:yoprolezpy
 NOMBRE:HOLA MUNDO
 LETRA_GENERADA:s
@@ -12,13 +14,27 @@ PALABRAS_POR_LETRA:o:osa|oso|ososo|oasis|ojoso,s:sosa|sij|sus|saja|sosias|soso|s
 === FIN PARTIDA ===
 
 === PARTIDA ===
-USUARIO:ale
-NOMBRE:adsdaLETRA_GENERADA:l
-LETRAS_JUGABLES:l,s,d,m,u,a,o
-PALABRAS_DICCIONARIO:lodo,alosa,alada,mol,alado,molla,olma,molso,amolado,salso,luma,lamoso,llamado,lodoso,lulo,ludo,ulua,modal,dala,musola,amol,malulo,soldado,sasal,lado,salsa,mal,adsl,solado,mula,aluda,alama,salol,lada,salado,ala,saludo,mamola,lolo,usual,adula,dolado,lomoso,lomudo,olla,adul,sollado,moloso,lsd,almo,mulo,losa,maslo,mallo,lomo,llama,dolo,dolama,molo,saluda,alamud,dalla,sulla,losado,alauda,doloso,llosa,olmo,alud,sollo,ludada,almud,loa,mala,mauloso,alma,dula,sol,ulala,moduloso,sal,salamo,adala,ollado,las,molsa,mola,ola,mullo,lama,lomada,llosa,loma,laso,malla,salma,salmo,almudada,sala,amolada
-PALABRAS_CORRECTAS:
-TIEMPO:11
-LETRAS_INICIALES:l:0,a:0,m:0,o:0,s:0,u:0,d:0
-PALABRAS_POR_LETRA:l:lodo|luma|lamoso|llamado|lodoso|lulo|ludo|lado|lada|lolo|lomoso|lomudo|lsd|losa|lomo|llama|losado|llosa|ludada|loa|las|lama|lomada|llosa|loma|laso,a:alosa|alada|alado|amolado|amol|adsl|aluda|alama|ala|adula|adul|almo|alamud|alauda|alud|almud|alma|adala|almudada|amolada,m:mol|molla|molso|modal|musola|malulo|mal|mula|mamola|moloso|mulo|maslo|mallo|molo|mala|mauloso|moduloso|molsa|mola|mullo|malla,o:olma|olla|olmo|ollado|ola,s:salso|soldado|sasal|salsa|solado|salol|salado|saludo|sollado|saluda|sulla|sollo|sol|sal|salamo|salma|salmo|sala,u:ulua|usual|ulala,d:dala|dolado|dolo|dolama|dalla|doloso|dula
+USUARIO:yoprolezpy
+NOMBRE:SinNombre
+LETRA_GENERADA:t
+LETRAS_JUGABLES:m,z,r,t,l,a,o
+PALABRAS_DICCIONARIO:mato,atalar,tarra,amatal,lota,atortolar,talo,mazarota,tomo,totoral,atol,malmatar,maltratar,azotar,tozo,marlotar,marlota,tozar,alotar,tomar
+PALABRAS_CORRECTAS:mato,tozo,atalar,tarra,amatal,tomar
+TIEMPO:81
+LETRAS_INICIALES:m:1,a:2,t:3,l:0
+PALABRAS_POR_LETRA:m:mato|mazarota|malmatar|maltratar|marlotar|marlota,a:atalar|amatal|atortolar|atol|azotar|alotar,t:tarra|talo|tomo|totoral|tozo|tozar|tomar,l:lota
+=== FIN PARTIDA ===
+
+=== PARTIDA ===
+
+USUARIO:yoprolezpy
+NOMBRE:Wukong
+LETRA_GENERADA:t
+LETRAS_JUGABLES:m,z,r,t,l,a,o
+PALABRAS_DICCIONARIO:mato,atalar,tarra,amatal,lota,atortolar,talo,mazarota,tomo,totoral,atol,malmatar,maltratar,azotar,tozo,marlotar,marlota,tozar,alotar,tomar
+PALABRAS_CORRECTAS:mato,tozo,atalar,tarra,amatal
+TIEMPO:71
+LETRAS_INICIALES:m:1,a:2,t:2,l:0
+PALABRAS_POR_LETRA:m:mato|mazarota|malmatar|maltratar|marlotar|marlota,a:atalar|amatal|atortolar|atol|azotar|alotar,t:tarra|talo|tomo|totoral|tozo|tozar|tomar,l:lota
 === FIN PARTIDA ===
 

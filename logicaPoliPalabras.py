@@ -12,6 +12,12 @@ FRECUENCIA_LETRAS: list = {
     'y': 0.90, 'z': 0.52
 }
 
+VALORES_LETRAS: list = {
+    'a': 1, 'b': 3, 'c': 3, 'd': 2, 'e': 1, 'f': 4, 'g': 2, 'h': 4, 'i': 1, 'j': 8,
+    'k': 8, 'l': 1, 'm': 3, 'n': 1, 'ñ': 8, 'o': 1, 'p': 3, 'q': 5, 'r': 1, 's': 1,
+    't': 1, 'u': 1, 'v': 4, 'w': 8, 'x': 8, 'y': 4, 'z': 10
+}
+
 class Juego:
     def __init__(self):
         self.palabras: list = []
@@ -21,6 +27,7 @@ class Juego:
         self.palabrasCorrectas: list = []
         self.letrasIniciales: list = {}
         self.palabrasPorLetra: list = {}
+        self.puntajes_palabras: dict = {}  # <-- Nuevo diccionario para puntajes
 
         
     
@@ -59,8 +66,9 @@ class Juego:
                         break
     
     def disminuirPalabras(self) -> None:
-        if len(self.palabras) > 100:
-            self.palabras = random.sample(self.palabras, 100)
+        if len(self.palabras) > 20:
+            self.palabras = random.sample(self.palabras, 20)
+        
 
     def checkearPalabra(self,entrada:str) ->str:
         stringSalida = ''
@@ -78,7 +86,10 @@ class Juego:
             inicial = entrada[0]
             if inicial in self.letrasIniciales:
                 self.letrasIniciales[inicial] += 1
-                
+
+            # Calcular y guardar el puntaje de la palabra
+            puntaje = sum(VALORES_LETRAS.get(letra, 0) for letra in entrada)
+            self.puntajes_palabras[entrada] = puntaje  # <-- Guardar puntaje
 
         return stringSalida
 

@@ -63,7 +63,7 @@ def menu_Main():
         PANTALLA_ALTO // 2 - botonAlto - espacio_vertical // 2,
         botonAncho,
         botonAlto,
-        "Poli Juegos",
+        "Jugar Polipalabras",
         COLOR_BOTON,
         COLOR_BOTON_HOVER
     )
@@ -133,7 +133,7 @@ def menu_Main():
 
         pantalla.fill(COLOR_FONDO)
 
-        textoTitulo = fuenteTitulo.render("Juegos Palabras", True, COLOR_TITULO)
+        textoTitulo = fuenteTitulo.render("Poli Juegos", True, COLOR_TITULO)
         rectTitulo = textoTitulo.get_rect(center = (PANTALLA_ANCHO // 2, 150))
         pantalla.blit(textoTitulo,rectTitulo)
 
