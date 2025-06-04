@@ -709,7 +709,7 @@ def main():
         juego.letraGenerada = juego.generarLetra()
         juego.generarLetrasJugables()
         juego.obtenerPalabras()
-        juego.disminuirPalabras(2)
+        juego.disminuirPalabras(20)
         juego.guardarLetrasIniciales()
         print(juego.palabras)
     UIjuego = juegoUI(juego)
