@@ -6,23 +6,32 @@ import subprocess
 pygame.init()
 
 # --- Configuración ---
-ANCHO = 600
-ALTO = 500
-COLOR_FONDO = (240, 240, 240)
-COLOR_TEXTO = (0, 0, 0)
+ANCHO = 800
+ALTO = 760  # Más grande para mejor espaciado
+COLOR_FONDO = (245, 245, 240)  # Mármol claro
+COLOR_TEXTO = (44, 62, 80)     # Gris piedra
 COLOR_INPUT = (255, 255, 255)
-COLOR_INPUT_ACTIVO = (200, 220, 255)
-COLOR_BOTON = (100, 180, 100)
-COLOR_BOTON_TEXTO = (255, 255, 255)
-COLOR_LINK = (0, 0, 200)
-COLOR_ERROR = (200, 0, 0)
+COLOR_INPUT_ACTIVO = (230, 230, 210)  # Mármol suave
+COLOR_BOTON = (212, 175, 55)          # Dorado
+COLOR_BOTON_TEXTO = (44, 62, 80)      # Gris piedra
+COLOR_LINK = (30, 60, 150)            # Azul clásico
+COLOR_ERROR = (200, 60, 60)
 
-FUENTE = pygame.font.SysFont(None, 32)
-FUENTE_TITULO = pygame.font.SysFont(None, 40)
-FUENTE_LINK = pygame.font.SysFont(None, 28)
+FUENTE = pygame.font.Font("augustus/AUGUSTUS.ttf", 28)
+FUENTE_TITULO = pygame.font.Font("dalek_pinpoint/DalekPinpointBold.ttf", 48)
+FUENTE_LINK = pygame.font.Font("augustus/AUGUSTUS.ttf", 22)
+FUENTE_BOTON = pygame.font.Font("augustus/AUGUSTUS.ttf", 24)
 
 pantalla = pygame.display.set_mode((ANCHO, ALTO))
 pygame.display.set_caption("Registro")
+
+def draw_gradient(surface, color1, color2, ancho, alto):
+    for y in range(alto):
+        ratio = y / alto
+        r = int(color1[0] * (1 - ratio) + color2[0] * ratio)
+        g = int(color1[1] * (1 - ratio) + color2[1] * ratio)
+        b = int(color1[2] * (1 - ratio) + color2[2] * ratio)
+        pygame.draw.line(surface, (r, g, b), (0, y), (ancho, y))
 
 # --- Campos de texto ---
 class InputBox:
@@ -48,10 +57,14 @@ class InputBox:
     def draw(self, pantalla):
         display_text = '*' * len(self.text) if self.password else self.text
         color = COLOR_INPUT_ACTIVO if self.active else COLOR_INPUT
-        pygame.draw.rect(pantalla, color, self.rect)
-        pygame.draw.rect(pantalla, COLOR_TEXTO, self.rect, 2)
+        border_color = COLOR_BOTON if self.active else (180, 180, 160)
+        shadow_rect = self.rect.move(3, 3)
+        pygame.draw.rect(pantalla, (220, 210, 180), shadow_rect, border_radius=10)
+        pygame.draw.rect(pantalla, color, self.rect, border_radius=10)
+        pygame.draw.rect(pantalla, border_color, self.rect, 3, border_radius=10)
         txt_surface = FUENTE.render(display_text, True, COLOR_TEXTO)
-        pantalla.blit(txt_surface, (self.rect.x+5, self.rect.y+8))
+        text_y = self.rect.y + (self.rect.h - txt_surface.get_height()) // 2
+        pantalla.blit(txt_surface, (self.rect.x+10, text_y))
 
     def clear(self):
         self.text = ''
@@ -65,8 +78,11 @@ class Boton:
         self.color_texto = color_texto
 
     def draw(self, pantalla):
-        pygame.draw.rect(pantalla, self.color, self.rect)
-        txt_surface = FUENTE.render(self.texto, True, self.color_texto)
+        shadow_rect = self.rect.move(3, 3)
+        pygame.draw.rect(pantalla, (200, 180, 100), shadow_rect, border_radius=14)
+        pygame.draw.rect(pantalla, self.color, self.rect, border_radius=14)
+        pygame.draw.rect(pantalla, (180, 150, 40), self.rect, 3, border_radius=14)
+        txt_surface = FUENTE_BOTON.render(self.texto, True, self.color_texto)
         pantalla.blit(txt_surface, (self.rect.x + self.rect.w//2 - txt_surface.get_width()//2,
                                     self.rect.y + self.rect.h//2 - txt_surface.get_height()//2))
 
@@ -93,16 +109,24 @@ class Link:
         return evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1 and self.rect.collidepoint(pos)
 
 # --- Instancias ---
-input_usuario = InputBox(200, 90, 200, 40)
-input_email = InputBox(200, 160, 200, 40)
-input_password = InputBox(200, 230, 200, 40, password=True)
-input_password2 = InputBox(200, 300, 200, 40, password=True)
-boton_register = Boton(250, 370, 100, 45, "Register", COLOR_BOTON, COLOR_BOTON_TEXTO)
-link_login = Link(230, 440, "Iniciar Sesión")
+CAMPO_X = 80
+CAMPO_W = 440
+CAMPO_H = 48
+ESPACIO_Y = 90  # Más espacio vertical
+
+input_usuario = InputBox(CAMPO_X, 170, CAMPO_W, CAMPO_H)
+input_email = InputBox(CAMPO_X, 170 + ESPACIO_Y, CAMPO_W, CAMPO_H)
+input_password = InputBox(CAMPO_X, 170 + ESPACIO_Y * 2, CAMPO_W, CAMPO_H, password=True)
+input_password2 = InputBox(CAMPO_X, 170 + ESPACIO_Y * 3, CAMPO_W, CAMPO_H, password=True)
+
+# Centrar el botón de registro y los textos debajo
+boton_register_x = (ANCHO - CAMPO_W) // 2
+boton_register_y = 170 + ESPACIO_Y * 4 + 10
+boton_register = Boton(boton_register_x, boton_register_y, CAMPO_W, 56, "Registrarse", COLOR_BOTON, COLOR_BOTON_TEXTO)
+link_login = Link(0, 0, "Iniciar Sesión")
 
 mensaje_error = ""
 mostrar_error = False
-abrir_login_flag = False
 
 def leer_usuarios():
     usuarios = []
@@ -131,36 +155,45 @@ def abrir_login():
 
 # --- Main loop ---
 while True:
-    pantalla.fill(COLOR_FONDO)
+    draw_gradient(pantalla, (245, 245, 240), (220, 220, 210), ANCHO, ALTO)
+    pygame.draw.line(pantalla, COLOR_BOTON, (80, 110), (ANCHO-80, 110), 4)
 
-    # Títulos de campos
-    titulo = FUENTE_TITULO.render("Registro de Usuario", True, COLOR_TEXTO)
-    pantalla.blit(titulo, (ANCHO//2 - titulo.get_width()//2, 30))
-    usuario_lbl = FUENTE.render("Nombre de usuario:", True, COLOR_TEXTO)
-    pantalla.blit(usuario_lbl, (input_usuario.rect.x, input_usuario.rect.y - 30))
-    email_lbl = FUENTE.render("Correo electrónico:", True, COLOR_TEXTO)
-    pantalla.blit(email_lbl, (input_email.rect.x, input_email.rect.y - 30))
-    password_lbl = FUENTE.render("Contraseña:", True, COLOR_TEXTO)
-    pantalla.blit(password_lbl, (input_password.rect.x, input_password.rect.y - 30))
-    password2_lbl = FUENTE.render("Repetir contraseña:", True, COLOR_TEXTO)
-    pantalla.blit(password2_lbl, (input_password2.rect.x, input_password2.rect.y - 30))
+    # Título
+    titulo = FUENTE_TITULO.render("Registro de Usuario", True, COLOR_BOTON)
+    pantalla.blit(titulo, (ANCHO//2 - titulo.get_width()//2, 40))
 
-    # Campos y botones
+    # Subtítulos alineados a la izquierda sobre cada campo
+    usuario_lbl = FUENTE.render("Nombre de usuario:", True, COLOR_LINK)
+    pantalla.blit(usuario_lbl, (input_usuario.rect.x, input_usuario.rect.y - 32))
+    email_lbl = FUENTE.render("Correo electrónico:", True, COLOR_LINK)
+    pantalla.blit(email_lbl, (input_email.rect.x, input_email.rect.y - 32))
+    password_lbl = FUENTE.render("Contraseña:", True, COLOR_LINK)
+    pantalla.blit(password_lbl, (input_password.rect.x, input_password.rect.y - 32))
+    password2_lbl = FUENTE.render("Repetir contraseña:", True, COLOR_LINK)
+    pantalla.blit(password2_lbl, (input_password2.rect.x, input_password2.rect.y - 32))
+
+    # Campos y botón
     input_usuario.draw(pantalla)
     input_email.draw(pantalla)
     input_password.draw(pantalla)
     input_password2.draw(pantalla)
     boton_register.draw(pantalla)
 
-    # Texto de login
-    texto_login = FUENTE.render("¿Ya tienes cuenta?:", True, COLOR_TEXTO)
-    pantalla.blit(texto_login, (input_usuario.rect.x, 420))
+    # Texto de login y link centrados debajo del botón
+    texto_login = FUENTE.render("¿Ya tienes cuenta?", True, COLOR_TEXTO)
+    x_login = ANCHO // 2 - texto_login.get_width() // 2
+    y_login = boton_register.rect.y + boton_register.rect.h + 40
+    pantalla.blit(texto_login, (x_login, y_login))
+
+    link_login.x = ANCHO // 2 - link_login.txt_surface.get_width() // 2
+    link_login.y = y_login + texto_login.get_height() + 16
+    link_login.rect.topleft = (link_login.x, link_login.y)
     link_login.draw(pantalla)
 
     # Mensaje de error
     if mostrar_error and mensaje_error:
         error_surface = FUENTE.render(mensaje_error, True, COLOR_ERROR)
-        pantalla.blit(error_surface, (ANCHO//2 - error_surface.get_width()//2, 60))
+        pantalla.blit(error_surface, (ANCHO//2 - error_surface.get_width()//2, 90))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
