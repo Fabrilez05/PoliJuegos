@@ -73,6 +73,7 @@ def cargar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, indi
         tiempo_guardado = 0
         letras_iniciales = {}
         palabras_por_letra = {}
+        puntajes_palabras = {}
 
         for linea in datos:
             if linea.startswith("LETRA_GENERADA:"):
@@ -100,17 +101,16 @@ def cargar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, indi
                         if ":" in par:
                             letra, pals = par.split(":")
                             palabras_por_letra[letra] = pals.split("|") if pals else []
+            elif linea.startswith("PUNTAJES_PALABRAS:"):
+                partes = linea.split(":", 1)[1].strip()
+                if partes:
+                    for par in partes.split(","):
+                        if ":" in par:
+                            palabra, puntaje = par.split(":")
+                            puntajes_palabras[palabra] = int(puntaje)
+    return letra_generada, letras_jugables, palabras_correctas, tiempo_guardado, palabras, letras_iniciales, palabras_por_letra, puntajes_palabras
 
-        # Si no se guardó PALABRAS_POR_LETRA, reconstruirlo desde palabras
-        if not palabras_por_letra and palabras:
-            for palabra in palabras:
-                if palabra:
-                    letra = palabra[0]
-                    palabras_por_letra.setdefault(letra, []).append(palabra)
-
-        return letra_generada, letras_jugables, palabras_correctas, tiempo_guardado, palabras, letras_iniciales, palabras_por_letra
-
-def guardar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, indice=None, juego=None, tiempo_transcurrido=0,nombre = None):
+def guardar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, indice=None, juego=None, tiempo_transcurrido=0, nombre=None):
     # Lee todas las partidas
     if not os.path.exists(nombre_archivo):
         partidas = []
@@ -131,6 +131,11 @@ def guardar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, ind
             f"{letra}:{'|'.join(juego.palabrasPorLetra[letra])}" for letra in juego.palabrasPorLetra
         )
     
+    # Serializar puntajes_palabras
+    puntajes_str = ""
+    if hasattr(juego, "puntajes_palabras") and juego.puntajes_palabras:
+        puntajes_str = ",".join(f"{pal}:{juego.puntajes_palabras[pal]}" for pal in juego.puntajes_palabras)
+
     # Construye el nuevo registro
     registro = f"USUARIO:{usuario}\n"
     registro += f"NOMBRE:{nombre}\n"
@@ -143,8 +148,10 @@ def guardar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, ind
         registro += f"LETRAS_INICIALES:{letras_iniciales_str}\n"
     if palabras_por_letra_str:
         registro += f"PALABRAS_POR_LETRA:{palabras_por_letra_str}\n"
+    if puntajes_str:
+        registro += f"PUNTAJES_PALABRAS:{puntajes_str}\n"
     registro += "=== FIN PARTIDA ===\n\n"
-    
+
     # Elimina cualquier partida previa del mismo usuario y nombre
     nuevas_partidas = []
     for p in partidas:
@@ -158,11 +165,12 @@ def guardar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, ind
                 es_misma = True
         if not es_misma:
             nuevas_partidas.append(p)
-    
-    # Guarda todas las partidas
+
+    # Guarda todas las partidas previas (sin la vieja de este usuario/nombre) y la nueva
     with open(nombre_archivo, "w", encoding="utf-8") as f:
-        for p in partidas:
-            f.write("=== PARTIDA ===\n" + p)
+        for p in nuevas_partidas:
+            f.write("=== PARTIDA ===\n" + p.strip() + "\n")
+        f.write("=== PARTIDA ===\n" + registro)
 
 def pedir_nombre_partida(main_size):
     # Store the original display surface
@@ -653,13 +661,15 @@ def main():
         partida = False
 
     if partida:
-        letra_generada, letras_jugables, palabras_correctas, tiempo_guardado, palabras, letras_iniciales, palabras_por_letra = partida
+        # Unpack the new value
+        letra_generada, letras_jugables, palabras_correctas, tiempo_guardado, palabras, letras_iniciales, palabras_por_letra, puntajes_palabras = partida
         juego.letraGenerada = letra_generada
         juego.letrasJugables = letras_jugables
         juego.palabrasCorrectas = palabras_correctas
         juego.palabras = palabras
         juego.letrasIniciales = letras_iniciales
         juego.palabrasPorLetra = palabras_por_letra
+        juego.puntajes_palabras = puntajes_palabras  # <--- add this line
         print(juego.palabras)
         print(len(juego.palabras))
     else:
