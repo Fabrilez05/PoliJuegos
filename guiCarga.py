@@ -15,18 +15,27 @@ else:
     pathJuego = os.path.join(os.path.dirname(__file__), "guiPoliPalabras.py")
     registro = os.path.join(os.path.dirname(__file__), "registroPoliPalabras.txt")
 
-ANCHO, ALTO = 500, 300
-COLOR_FONDO = (240, 240, 240)
-COLOR_BOTON = (100, 180, 100)
-COLOR_BOTON2 = (100, 100, 180)
-COLOR_TEXTO = (0, 0, 0)
-COLOR_BOTON_TEXTO = (255, 255, 255)
-COLOR_LISTA = (220, 220, 255)
-FUENTE = pygame.font.SysFont(None, 36)
-FUENTE_LISTA = pygame.font.SysFont(None, 28)
+ANCHO, ALTO = 800, 600  # Más grande para mejor estética y espacio
+COLOR_FONDO = (245, 245, 240)  # Mármol claro
+COLOR_BOTON = (212, 175, 55)   # Dorado
+COLOR_BOTON2 = (100, 100, 180) # Azul clásico
+COLOR_TEXTO = (44, 62, 80)     # Gris piedra
+COLOR_BOTON_TEXTO = (44, 62, 80)
+COLOR_LISTA = (230, 230, 210)  # Mármol suave
+COLOR_LISTA_HOVER = (255, 245, 180)
+FUENTE = pygame.font.Font("augustus/AUGUSTUS.ttf", 32)
+FUENTE_LISTA = pygame.font.Font("augustus/AUGUSTUS.ttf", 24)
 
 pantalla = pygame.display.set_mode((ANCHO, ALTO))
 pygame.display.set_caption("Selecciona una opción")
+
+def draw_gradient(surface, color1, color2, ancho, alto):
+    for y in range(alto):
+        ratio = y / alto
+        r = int(color1[0] * (1 - ratio) + color2[0] * ratio)
+        g = int(color1[1] * (1 - ratio) + color2[1] * ratio)
+        b = int(color1[2] * (1 - ratio) + color2[2] * ratio)
+        pygame.draw.line(surface, (r, g, b), (0, y), (ancho, y))
 
 def obtener_partidas_usuario(registro, usuario):
     if not os.path.exists(registro):
@@ -51,41 +60,58 @@ def obtener_partidas_usuario(registro, usuario):
 def ventana_lista_partidas(partidas):
     seleccion = None
     scroll = 0
-    max_visible = 4  # Número de partidas visibles a la vez
+    max_visible = 4
+    lista_ancho = 600  # Más ancho, casi toda la ventana
+    lista_x = (ANCHO - lista_ancho) // 2
+    item_alto = 64
+    espacio_y = 24
     while True:
-        pantalla.fill(COLOR_FONDO)
-        titulo = FUENTE.render("Selecciona una partida:", True, COLOR_TEXTO)
+        draw_gradient(pantalla, (245, 245, 240), (220, 220, 210), ANCHO, ALTO)
+        titulo = FUENTE.render("Selecciona una partida:", True, COLOR_BOTON)
         pantalla.blit(titulo, (ANCHO//2 - titulo.get_width()//2, 30))
         botones = []
         visible_partidas = partidas[scroll:scroll+max_visible]
+        mouse_pos = pygame.mouse.get_pos()
         for i, nombre in enumerate(visible_partidas):
-            rect = pygame.Rect(100, 80 + i*50, 300, 40)
+            rect = pygame.Rect(lista_x, 100 + i*(item_alto + espacio_y), lista_ancho, item_alto)
             botones.append(rect)
-            pygame.draw.rect(pantalla, COLOR_LISTA, rect)
-            pygame.draw.rect(pantalla, COLOR_TEXTO, rect, 2)
+            is_hover = rect.collidepoint(mouse_pos)
+            color = COLOR_LISTA_HOVER if is_hover else COLOR_LISTA
+            shadow_rect = rect.move(3, 3)
+            pygame.draw.rect(pantalla, (220, 210, 180), shadow_rect, border_radius=14)
+            pygame.draw.rect(pantalla, color, rect, border_radius=14)
+            pygame.draw.rect(pantalla, COLOR_BOTON, rect, 2, border_radius=14)
             txt = FUENTE_LISTA.render(nombre, True, COLOR_TEXTO)
-            pantalla.blit(txt, (rect.x + 10, rect.y + 8))
+            pantalla.blit(
+                txt,
+                (rect.x + rect.w // 2 - txt.get_width() // 2, rect.y + rect.h // 2 - txt.get_height() // 2)
+            )
         # Flechas de scroll si hay más partidas
         if scroll > 0:
-            pygame.draw.polygon(pantalla, (80,80,80), [(250,70),(270,70),(260,55)])
+            pygame.draw.polygon(
+                pantalla, COLOR_BOTON,
+                [(ANCHO//2 - 20, 90), (ANCHO//2 + 20, 90), (ANCHO//2, 60)]
+            )
         if scroll + max_visible < len(partidas):
-            pygame.draw.polygon(pantalla, (80,80,80), [(250,80+max_visible*50),(270,80+max_visible*50),(260,95+max_visible*50)])
+            y_arrow = 100 + max_visible * (item_alto + espacio_y) - espacio_y // 2
+            pygame.draw.polygon(
+                pantalla, COLOR_BOTON,
+                [(ANCHO//2 - 20, y_arrow), (ANCHO//2 + 20, y_arrow), (ANCHO//2, y_arrow + 30)]
+            )
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  # Solo click izquierdo selecciona
+                if event.button == 1:
                     for i, rect in enumerate(botones):
                         if rect.collidepoint(event.pos):
                             seleccion = i + scroll
                             break
-                elif event.button == 4:  # Scroll up
-                    if scroll > 0:
-                        scroll -= 1
-                elif event.button == 5:  # Scroll down
-                    if scroll + max_visible < len(partidas):
-                        scroll += 1
+                elif event.button == 4 and scroll > 0:
+                    scroll -= 1
+                elif event.button == 5 and scroll + max_visible < len(partidas):
+                    scroll += 1
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP and scroll > 0:
                     scroll -= 1
@@ -97,18 +123,29 @@ def ventana_lista_partidas(partidas):
     return seleccion
 
 def main():
-    boton_nueva = pygame.Rect(70, 180, 160, 60)
-    boton_cargar = pygame.Rect(270, 180, 160, 60)
+    boton_ancho = 340   # Más ancho
+    boton_alto = 100    # Más alto
+    boton_nueva = pygame.Rect(ANCHO//2 - boton_ancho - 40, 320, boton_ancho, boton_alto)
+    boton_cargar = pygame.Rect(ANCHO//2 + 40, 320, boton_ancho, boton_alto)
     while True:
-        pantalla.fill(COLOR_FONDO)
-        titulo = FUENTE.render("¿Qué deseas hacer?", True, COLOR_TEXTO)
-        pantalla.blit(titulo, (ANCHO//2 - titulo.get_width()//2, 60))
-        pygame.draw.rect(pantalla, COLOR_BOTON, boton_nueva)
-        pygame.draw.rect(pantalla, COLOR_BOTON2, boton_cargar)
+        draw_gradient(pantalla, (245, 245, 240), (220, 220, 210), ANCHO, ALTO)
+        pygame.draw.line(pantalla, COLOR_BOTON, (100, 120), (ANCHO-100, 120), 5)
+        titulo = FUENTE.render("¿Qué deseas hacer?", True, COLOR_BOTON)
+        pantalla.blit(titulo, (ANCHO//2 - titulo.get_width()//2, 70))
+        # Botón Nueva Partida
+        shadow_nueva = boton_nueva.move(4, 4)
+        pygame.draw.rect(pantalla, (220, 210, 180), shadow_nueva, border_radius=18)
+        pygame.draw.rect(pantalla, COLOR_BOTON, boton_nueva, border_radius=18)
+        pygame.draw.rect(pantalla, (180, 150, 40), boton_nueva, 4, border_radius=18)
         txt_nueva = FUENTE.render("Partida Nueva", True, COLOR_BOTON_TEXTO)
+        pantalla.blit(txt_nueva, (boton_nueva.x + boton_nueva.w//2 - txt_nueva.get_width()//2, boton_nueva.y + boton_nueva.h//2 - txt_nueva.get_height()//2))
+        # Botón Cargar Partida
+        shadow_cargar = boton_cargar.move(4, 4)
+        pygame.draw.rect(pantalla, (220, 210, 180), shadow_cargar, border_radius=18)
+        pygame.draw.rect(pantalla, COLOR_BOTON2, boton_cargar, border_radius=18)
+        pygame.draw.rect(pantalla, (80, 80, 180), boton_cargar, 4, border_radius=18)
         txt_cargar = FUENTE.render("Cargar Partida", True, COLOR_BOTON_TEXTO)
-        pantalla.blit(txt_nueva, (boton_nueva.x + boton_nueva.w//2 - txt_nueva.get_width()//2, boton_nueva.y + 15))
-        pantalla.blit(txt_cargar, (boton_cargar.x + boton_cargar.w//2 - txt_cargar.get_width()//2, boton_cargar.y + 15))
+        pantalla.blit(txt_cargar, (boton_cargar.x + boton_cargar.w//2 - txt_cargar.get_width()//2, boton_cargar.y + boton_cargar.h//2 - txt_cargar.get_height()//2))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -122,7 +159,7 @@ def main():
                     partidas = obtener_partidas_usuario(registro, usuario_actual)
                     if not partidas:
                         msg = FUENTE.render("No hay partidas guardadas.", True, (200,0,0))
-                        pantalla.blit(msg, (ANCHO//2 - msg.get_width()//2, 120))
+                        pantalla.blit(msg, (ANCHO//2 - msg.get_width()//2, 180))
                         pygame.display.flip()
                         pygame.time.wait(1500)
                         continue

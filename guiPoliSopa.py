@@ -3,6 +3,7 @@ import sys
 import time
 import os
 import subprocess
+import random
 from logicaPoliSopa import PoliSopa, cargar_diccionario, seleccionar_palabras
 
 # --- Configuración ---
@@ -13,9 +14,20 @@ ANCHO_BOTON = 120
 ALTO_BOTON = 50
 FUENTE_SIZE = 32
 
+COLOR_FONDO = (245, 245, 240)  # Mármol claro
+COLOR_TEXTO = (44, 62, 80)     # Gris piedra
+COLOR_BOTON = (212, 175, 55)   # Dorado
+COLOR_BOTON2 = (100, 100, 180) # Azul clásico
+COLOR_BOTON_TEXTO = (44, 62, 80)
+COLOR_CASILLA = (255, 255, 255)
+COLOR_CASILLA_SELEC = (173, 216, 230)
+COLOR_SOMBRA = (220, 210, 180)
+
 # --- Inicialización ---
 pygame.init()
-fuente = pygame.font.SysFont(None, FUENTE_SIZE)
+FUENTE = pygame.font.Font("augustus/AUGUSTUS.ttf", 32)
+FUENTE_TITULO = pygame.font.Font("dalek_pinpoint/DalekPinpointBold.ttf", 48)
+FUENTE_BOTON = pygame.font.Font("augustus/AUGUSTUS.ttf", 28)
 
 usuario_actual = sys.argv[1] if len(sys.argv) > 1 else "anonimo"
 indice_partida = int(sys.argv[2]) if len(sys.argv) > 2 else None
@@ -114,61 +126,86 @@ else:
     nombre_partida = None
 
 # --- Dimensiones ventana ---
-ancho = juego.columnas * (ANCHO_CASILLA + MARGEN) + 700
-alto = juego.filas * (ALTO_CASILLA + MARGEN) + 200
+PANEL_LATERAL_ANCHO = 340
+MARGEN_IZQ = 60
+MARGEN_SUP = 120
 
+ancho = juego.columnas * (ANCHO_CASILLA + MARGEN) + PANEL_LATERAL_ANCHO + MARGEN_IZQ * 2 + 80  # +80 para más espacio
+alto = max(juego.filas * (ALTO_CASILLA + MARGEN) + 220, 700)
 pantalla = pygame.display.set_mode((ancho, alto))
 pygame.display.set_caption("PoliSopa")
 
 # --- Variables de estado ---
 seleccionadas = []
+usos_pista = 0
+penalizacion_total = 0
+pistas_reveladas = {}  # palabra: [índices de letras reveladas]
 
 clock = pygame.time.Clock()
+
+mensaje_pista = ""
+mensaje_pista_tiempo = 0
+
+def mostrar_mensaje_pista(texto):
+    global mensaje_pista, mensaje_pista_tiempo
+    mensaje_pista = texto
+    mensaje_pista_tiempo = pygame.time.get_ticks()
 
 def dibujar_tablero():
     for i in range(juego.filas):
         for j in range(juego.columnas):
-            x = MARGEN + j * (ANCHO_CASILLA + MARGEN)
-            y = MARGEN + i * (ALTO_CASILLA + MARGEN)
+            x = MARGEN_IZQ + j * (ANCHO_CASILLA + MARGEN)
+            y = MARGEN_SUP + i * (ALTO_CASILLA + MARGEN)  # Empieza después del título y subrayado
             rect = pygame.Rect(x, y, ANCHO_CASILLA, ALTO_CASILLA)
-            color = (173, 216, 230) if (i, j) in seleccionadas else (255, 255, 255)
-            pygame.draw.rect(pantalla, color, rect)
-            pygame.draw.rect(pantalla, (0, 0, 0), rect, 2)
+            shadow_rect = rect.move(3, 3)
+            pygame.draw.rect(pantalla, COLOR_SOMBRA, shadow_rect, border_radius=10)
+            color = COLOR_CASILLA_SELEC if (i, j) in seleccionadas else COLOR_CASILLA
+            pygame.draw.rect(pantalla, color, rect, border_radius=10)
+            pygame.draw.rect(pantalla, COLOR_BOTON, rect, 2, border_radius=10)
             letra = juego.tablero[i][j]
-            img = fuente.render(letra, True, (0, 0, 0))
+            img = FUENTE.render(letra, True, COLOR_TEXTO)
             pantalla.blit(img, (x + ANCHO_CASILLA//2 - img.get_width()//2, y + ALTO_CASILLA//2 - img.get_height()//2))
 
 def dibujar_bandeja():
     texto = ''.join([juego.tablero[f][c] for (f, c) in seleccionadas])
-    img = fuente.render(texto, True, (0, 0, 0))
-    x = MARGEN
-    y = juego.filas * (ALTO_CASILLA + MARGEN) + MARGEN
-    pantalla.blit(img, (x, y))
+    img = FUENTE.render(texto, True, (0, 0, 0))
+    x = MARGEN_IZQ
+    y = MARGEN_SUP + juego.filas * (ALTO_CASILLA + MARGEN) + 18  # Justo debajo del tablero
+    pygame.draw.rect(pantalla, (230,230,210), (x, y, juego.columnas * (ANCHO_CASILLA + MARGEN) - MARGEN, 48), border_radius=10)
+    pantalla.blit(img, (x + 12, y + 8))
 
 def dibujar_botones():
+    total_ancho = 2 * ANCHO_BOTON + 20
+    x1 = MARGEN_IZQ + (juego.columnas * (ANCHO_CASILLA + MARGEN) - total_ancho) // 2
+    y1 = MARGEN_SUP + juego.filas * (ALTO_CASILLA + MARGEN) + 80  # Más abajo de la bandeja
+
     # Botón Borrar
-    x1 = MARGEN
-    y1 = juego.filas * (ALTO_CASILLA + MARGEN) + 60
     rect_borrar = pygame.Rect(x1, y1, ANCHO_BOTON, ALTO_BOTON)
-    pygame.draw.rect(pantalla, (220, 100, 100), rect_borrar)
-    img_borrar = fuente.render("Borrar", True, (255, 255, 255))
+    shadow_rect_borrar = rect_borrar.move(3, 3)
+    pygame.draw.rect(pantalla, (220, 150, 150), shadow_rect_borrar, border_radius=12)
+    pygame.draw.rect(pantalla, (220, 100, 100), rect_borrar, border_radius=12)
+    img_borrar = FUENTE_BOTON.render("Borrar", True, (255, 255, 255))
     pantalla.blit(img_borrar, (x1 + ANCHO_BOTON//2 - img_borrar.get_width()//2, y1 + ALTO_BOTON//2 - img_borrar.get_height()//2))
 
     # Botón Aplicar
     x2 = x1 + ANCHO_BOTON + 20
     rect_aplicar = pygame.Rect(x2, y1, ANCHO_BOTON, ALTO_BOTON)
-    pygame.draw.rect(pantalla, (100, 180, 100), rect_aplicar)
-    img_aplicar = fuente.render("Aplicar", True, (255, 255, 255))
+    shadow_rect_aplicar = rect_aplicar.move(3, 3)
+    pygame.draw.rect(pantalla, (150, 220, 150), shadow_rect_aplicar, border_radius=12)
+    pygame.draw.rect(pantalla, (100, 180, 100), rect_aplicar, border_radius=12)
+    img_aplicar = FUENTE_BOTON.render("Aplicar", True, (255, 255, 255))
     pantalla.blit(img_aplicar, (x2 + ANCHO_BOTON//2 - img_aplicar.get_width()//2, y1 + ALTO_BOTON//2 - img_aplicar.get_height()//2))
 
     return rect_borrar, rect_aplicar
 
 def dibujar_boton_guardar(x, y):
-    ANCHO_GUARDAR = 120
-    ALTO_GUARDAR = 50
+    ANCHO_GUARDAR = 140
+    ALTO_GUARDAR = 54
     rect_guardar = pygame.Rect(x, y, ANCHO_GUARDAR, ALTO_GUARDAR)
-    pygame.draw.rect(pantalla, (255, 215, 0), rect_guardar)  # Amarillo
-    img_guardar = fuente.render("Guardar", True, (0, 0, 0))
+    shadow_rect_guardar = rect_guardar.move(3, 3)
+    pygame.draw.rect(pantalla, (255, 235, 120), shadow_rect_guardar, border_radius=12)
+    pygame.draw.rect(pantalla, COLOR_BOTON, rect_guardar, border_radius=12)
+    img_guardar = FUENTE_BOTON.render("Guardar", True, COLOR_BOTON_TEXTO)
     pantalla.blit(img_guardar, (x + ANCHO_GUARDAR//2 - img_guardar.get_width()//2, y + ALTO_GUARDAR//2 - img_guardar.get_height()//2))
     return rect_guardar
 
@@ -176,19 +213,17 @@ def es_adyacente(c1, c2):
     return abs(c1[0] - c2[0]) + abs(c1[1] - c2[1]) == 1
 
 def manejar_click(pos):
-    # Tablero
     for i in range(juego.filas):
         for j in range(juego.columnas):
-            x = MARGEN + j * (ANCHO_CASILLA + MARGEN)
-            y = MARGEN + i * (ALTO_CASILLA + MARGEN)
+            x = MARGEN_IZQ + j * (ANCHO_CASILLA + MARGEN)
+            y = MARGEN_SUP + i * (ALTO_CASILLA + MARGEN)
             rect = pygame.Rect(x, y, ANCHO_CASILLA, ALTO_CASILLA)
             if rect.collidepoint(pos):
                 if seleccionadas and (i, j) == seleccionadas[-1]:
-                    seleccionadas.pop()  # Permite deshacer la última selección
+                    seleccionadas.pop()
                     return
                 if (i, j) in seleccionadas:
-                    return  # Ya seleccionada (no permite seleccionar dos veces)
-                # Limita la cantidad máxima de letras seleccionadas a 9
+                    return
                 if len(seleccionadas) >= 9:
                     return
                 if not seleccionadas or es_adyacente(seleccionadas[-1], (i, j)):
@@ -196,29 +231,31 @@ def manejar_click(pos):
                 return
 
 def mostrar_tabla_progreso():
-    x0 = juego.columnas * (ANCHO_CASILLA + MARGEN) + 40
-    y0 = MARGEN
+    x0 = MARGEN_IZQ + juego.columnas * (ANCHO_CASILLA + MARGEN) + 40
+    y0 = MARGEN_SUP + 10  # Empieza debajo del subrayado
     tam_celda = 40
     espacio_y = 10
 
     for palabra in palabras:
+        indices_pista = pistas_reveladas.get(palabra, [])
         for idx, letra in enumerate(palabra):
             x = x0 + idx * (tam_celda + 2)
             y = y0
+            rect = pygame.Rect(x, y, tam_celda, tam_celda)
+            shadow_rect = rect.move(2, 2)
             if palabra in palabras_encontradas:
-                color = (100, 200, 100)  # Verde si encontrada
+                color = (100, 200, 100)
+                texto = letra
+            elif idx == 0 or idx in indices_pista:
+                color = (255, 255, 255)
                 texto = letra
             else:
-                if idx == 0:
-                    color = (255, 255, 255)  # Blanco para la primera letra
-                    texto = letra
-                else:
-                    color = (200, 200, 200)  # Gris para las no encontradas
-                    texto = "_"
-            rect = pygame.Rect(x, y, tam_celda, tam_celda)
-            pygame.draw.rect(pantalla, color, rect)
-            pygame.draw.rect(pantalla, (0, 0, 0), rect, 2)
-            img = fuente.render(texto, True, (0, 0, 0))
+                color = (200, 200, 200)
+                texto = "_"
+            pygame.draw.rect(pantalla, (200, 200, 220), shadow_rect, border_radius=8)
+            pygame.draw.rect(pantalla, color, rect, border_radius=8)
+            pygame.draw.rect(pantalla, (0, 0, 0), rect, 2, border_radius=8)
+            img = FUENTE.render(texto, True, (0, 0, 0))
             pantalla.blit(img, (x + tam_celda//2 - img.get_width()//2, y + tam_celda//2 - img.get_height()//2))
         y0 += tam_celda + espacio_y
 
@@ -397,17 +434,170 @@ def obtener_indice_partida(usuario, nombre_partida, nombre_archivo="registroSopa
                     return idx
     return None
 
+# --- Funciones de dibujo ---
+def draw_gradient(surface, color1, color2, ancho, alto):
+    for y in range(alto):
+        ratio = y / alto
+        r = int(color1[0] * (1 - ratio) + color2[0] * ratio)
+        g = int(color1[1] * (1 - ratio) + color2[1] * ratio)
+        b = int(color1[2] * (1 - ratio) + color2[2] * ratio)
+        pygame.draw.line(surface, (r, g, b), (0, y), (ancho, y))
+
+# Calcula la posición Y final de la tabla de progreso
+def obtener_y_final_tabla_progreso():
+    tam_celda = 40
+    espacio_y = 10
+    y0 = MARGEN_SUP + 10
+    return y0 + len(palabras) * (tam_celda + espacio_y)
+
+def ventana_cara_cruz():
+        ANCHO, ALTO = 400, 320
+        ventana = pygame.display.set_mode((ANCHO, ALTO))
+        fuente = pygame.font.Font("augustus/AUGUSTUS.ttf", 32)
+        fuente_btn = pygame.font.Font("augustus/AUGUSTUS.ttf", 28)
+        boton_cara = pygame.Rect(60, 220, 120, 50)
+        boton_cruz = pygame.Rect(220, 220, 120, 50)
+        eleccion = None
+        resultado = None
+        animando = False
+        frame = 0
+        img_cara = pygame.transform.scale(pygame.image.load("caramoneda.png"), (120, 120))
+        img_cruz = pygame.transform.scale(pygame.image.load("cruzmoneda.png"), (120, 120))
+        moneda_imgs = [img_cara, img_cruz]
+        while True:
+            ventana.fill((245, 245, 240))
+            txt = fuente.render("Elige: Cara o Cruz", True, COLOR_BOTON)
+            ventana.blit(txt, (ANCHO//2 - txt.get_width()//2, 40))
+            pygame.draw.rect(ventana, (220, 210, 180), boton_cara.move(3,3), border_radius=12)
+            pygame.draw.rect(ventana, COLOR_BOTON, boton_cara, border_radius=12)
+            txt_cara = fuente_btn.render("CARA", True, COLOR_BOTON_TEXTO)
+            ventana.blit(txt_cara, (boton_cara.x + boton_cara.w//2 - txt_cara.get_width()//2, boton_cara.y + boton_cara.h//2 - txt_cara.get_height()//2))
+            pygame.draw.rect(ventana, (220, 210, 180), boton_cruz.move(3,3), border_radius=12)
+            pygame.draw.rect(ventana, COLOR_BOTON2, boton_cruz, border_radius=12)
+            txt_cruz = fuente_btn.render("CRUZ", True, (255,255,255))
+            ventana.blit(txt_cruz, (boton_cruz.x + boton_cruz.w//2 - txt_cruz.get_width()//2, boton_cruz.y + boton_cruz.h//2 - txt_cruz.get_height()//2))
+            if animando:
+                img = moneda_imgs[frame % 2]
+                ventana.blit(img, (ANCHO//2 - 60, 80))
+                pygame.display.flip()
+                pygame.time.wait(120)
+                frame += 1
+                if frame > 12:
+                    resultado = random.choice(["cara", "cruz"])
+                    img = img_cara if resultado == "cara" else img_cruz
+                    ventana.blit(img, (ANCHO//2 - 60, 80))
+                    pygame.display.flip()
+                    pygame.time.wait(800)
+                    pygame.display.set_mode((ancho, alto))  # Restaura ventana principal
+                    return eleccion == resultado
+                continue
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.display.set_mode((ancho, alto))
+                    return False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if boton_cara.collidepoint(event.pos):
+                        eleccion = "cara"
+                        animando = True
+                    if boton_cruz.collidepoint(event.pos):
+                        eleccion = "cruz"
+                        animando = True
+            pygame.display.flip()
+
+def dar_pista():
+    global usos_pista
+    palabras_restantes = [p for p in palabras if p not in palabras_encontradas and p not in pistas_reveladas]
+    if not palabras_restantes:
+        return
+    palabra = random.choice(palabras_restantes)
+    letras = list(palabra)
+    random.shuffle(letras)
+    mitad = max(1, len(letras)//2)
+    indices_revelar = sorted(random.sample(range(len(letras)), mitad))
+    pistas_reveladas[palabra] = indices_revelar
+    mostrar_mensaje_pista(f"Pista aplicada a: {palabra.upper()}")
+
+def ventana_como_jugar():
+    ayuda_texto = [
+        "Reglas de PoliSopa:",
+        "",
+        "- Encuentra las 7 palabras ocultas en la sopa de letras.",
+        "- Selecciona letras adyacentes para formar palabras.",
+        "- Haz clic en 'Aplicar' para validar tu selección.",
+        "- Si la palabra es correcta, se marcará como encontrada.",
+        "",
+        "Pistas y penalizaciones:",
+        "- Puedes pedir una pista con el botón 'PISTA'.",
+        "- Para obtenerla, debes ganar un cara o cruz.",
+        "- Cada vez que pides una pista, se suma una penalización de tiempo.",
+        "- La penalización aumenta cada vez que usas una pista.",
+        "- Si ganas, se revelan letras de una palabra no encontrada.",
+        "- Si pierdes, solo se suma la penalización.",
+        "",
+        "¡Diviértete jugando PoliSopa!"
+    ]
+    ANCHO, ALTO = 920, 670  # Más grande para que entre todo el texto
+    ventana = pygame.display.set_mode((ANCHO, ALTO))
+    fuente = pygame.font.Font("augustus/AUGUSTUS.ttf", 20)  # Tamaño pequeño para el texto
+    fuente_titulo = pygame.font.Font("dalek_pinpoint/DalekPinpointBold.ttf", 30)
+    boton_cerrar = pygame.Rect(ANCHO//2 - 80, ALTO - 70, 160, 48)
+    while True:
+        ventana.fill((245, 245, 240))
+        titulo = fuente_titulo.render("¿Cómo Jugar?", True, COLOR_BOTON)
+        ventana.blit(titulo, (ANCHO//2 - titulo.get_width()//2, 24))
+        y = 80
+        for linea in ayuda_texto:
+            txt = fuente.render(linea, True, COLOR_TEXTO)
+            ventana.blit(txt, (40, y))
+            y += 32  # Más espacio entre líneas para mejor legibilidad
+        pygame.draw.rect(ventana, COLOR_BOTON, boton_cerrar, border_radius=12)
+        txt_cerrar = fuente.render("Cerrar", True, COLOR_BOTON_TEXTO)
+        ventana.blit(txt_cerrar, (boton_cerrar.x + boton_cerrar.w//2 - txt_cerrar.get_width()//2, boton_cerrar.y + 8))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.display.set_mode((ancho, alto))
+                return
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if boton_cerrar.collidepoint(event.pos):
+                    pygame.display.set_mode((ancho, alto))
+                    return
+        pygame.display.flip()
+
 # --- Main loop ---
 if __name__ == "__main__":
-    # Al inicio, después de crear la ventana principal
-    BOTON_VOLVER = pygame.Rect(ancho - 140, 20, 120, 40)  # 20px de margen derecho
+    # Botón ¿Cómo Jugar? (más grande, fuente más pequeña, color amarillo)
+    boton_como_jugar = pygame.Rect(40, 30, 230, 44)  # Más ancho
+    # Botón Volver (a la derecha del botón ¿Cómo Jugar?)
+    BOTON_VOLVER = pygame.Rect(boton_como_jugar.right + 20, 30, 140, 44)  # 20px de separación
 
     while True:
         pantalla.fill((240, 240, 240))
+        draw_gradient(pantalla, COLOR_FONDO, (220, 220, 210), ancho, alto)
+
+        # Dibuja botón ¿Cómo Jugar?
+        pygame.draw.rect(pantalla, COLOR_BOTON, boton_como_jugar, border_radius=12)
+        fuente_boton_como_jugar = pygame.font.Font("augustus/AUGUSTUS.ttf", 22)
+        txt_como_jugar = fuente_boton_como_jugar.render("¿Cómo Jugar?", True, COLOR_BOTON_TEXTO)
+        pantalla.blit(txt_como_jugar, (boton_como_jugar.x + boton_como_jugar.w//2 - txt_como_jugar.get_width()//2, boton_como_jugar.y + 8))
+
+        # Dibuja botón Volver justo al lado
+        pygame.draw.rect(pantalla, COLOR_BOTON, BOTON_VOLVER, border_radius=12)
+        fuente_volver = pygame.font.Font("augustus/AUGUSTUS.ttf", 22)
+        txt_volver = fuente_volver.render("Volver", True, COLOR_BOTON_TEXTO)
+        pantalla.blit(txt_volver, (BOTON_VOLVER.x + BOTON_VOLVER.w//2 - txt_volver.get_width()//2, BOTON_VOLVER.y + BOTON_VOLVER.h//2 - txt_volver.get_height()//2))
+
+        # Título
+        titulo = FUENTE_TITULO.render("PoliSopa", True, COLOR_BOTON)
+        pantalla.blit(titulo, (ancho // 2 - titulo.get_width() // 2, 30))
+        pygame.draw.line(pantalla, COLOR_BOTON, (40, MARGEN_SUP - 10), (ancho-40, MARGEN_SUP - 10), 5)
+
         dibujar_tablero()
         dibujar_bandeja()
-        rect_borrar, rect_aplicar = dibujar_botones()
         mostrar_tabla_progreso()
+
+        # --- NUEVO: Calcula la posición debajo de la tabla de progreso ---
+        x_panel = MARGEN_IZQ + juego.columnas * (ANCHO_CASILLA + MARGEN) + 60
+        y_panel = obtener_y_final_tabla_progreso() + 10
 
         # Mostrar contador de tiempo
         if not partida_finalizada:
@@ -417,27 +607,66 @@ if __name__ == "__main__":
         minutos = tiempo_actual // 60
         segundos = tiempo_actual % 60
         texto_tiempo = f"Tiempo: {minutos:02d}:{segundos:02d}"
-        x_tiempo = juego.columnas * (ANCHO_CASILLA + MARGEN) + 40
-        y_tiempo = juego.filas * (ALTO_CASILLA + MARGEN) + 20
-        img_tiempo = fuente.render(texto_tiempo, True, (0, 0, 0))
-        pantalla.blit(img_tiempo, (x_tiempo, y_tiempo))
+        img_tiempo = FUENTE.render(texto_tiempo, True, (0, 0, 0))
+        pantalla.blit(img_tiempo, (x_panel, y_panel))
 
-        # Botón Guardar
-        x_guardar = x_tiempo + img_tiempo.get_width() + 30
-        y_guardar = y_tiempo - 10
-        rect_guardar = dibujar_boton_guardar(x_guardar, y_guardar)
+        # Botón Guardar (debajo del tiempo)
+        ANCHO_GUARDAR = 180
+        ALTO_GUARDAR = 60
+        y_guardar = y_panel + img_tiempo.get_height() + 18
+        rect_guardar = pygame.Rect(x_panel, y_guardar, ANCHO_GUARDAR, ALTO_GUARDAR)
+        shadow_rect_guardar = rect_guardar.move(3, 3)
+        pygame.draw.rect(pantalla, (255, 235, 120), shadow_rect_guardar, border_radius=14)
+        pygame.draw.rect(pantalla, COLOR_BOTON, rect_guardar, border_radius=14)
+        img_guardar = FUENTE_BOTON.render("GUARDAR", True, COLOR_BOTON_TEXTO)
+        pantalla.blit(img_guardar, (rect_guardar.x + rect_guardar.w//2 - img_guardar.get_width()//2, y_guardar + ALTO_GUARDAR//2 - img_guardar.get_height()//2))
 
-        pygame.draw.rect(pantalla, (180, 100, 100), BOTON_VOLVER)
-        fuente_boton = pygame.font.SysFont(None, 28)
-        txt_volver = fuente_boton.render("Volver", True, (255,255,255))
-        pantalla.blit(txt_volver, (BOTON_VOLVER.x + BOTON_VOLVER.w//2 - txt_volver.get_width()//2,
-                                   BOTON_VOLVER.y + BOTON_VOLVER.h//2 - txt_volver.get_height()//2))
+        # Botón Pista (a la derecha del botón guardar)
+        ANCHO_PISTA = 180
+        ALTO_PISTA = 60
+        x_pista = x_panel + ANCHO_GUARDAR + 30  # 30px de espacio
+        y_pista = y_guardar
+        rect_pista = pygame.Rect(x_pista, y_pista, ANCHO_PISTA, ALTO_PISTA)
+        shadow_rect_pista = rect_pista.move(3, 3)
+        pygame.draw.rect(pantalla, (200, 200, 255), shadow_rect_pista, border_radius=14)
+        pygame.draw.rect(pantalla, COLOR_BOTON2, rect_pista, border_radius=14)
+        img_pista = FUENTE_BOTON.render("PISTA", True, (255, 255, 255))
+        pantalla.blit(img_pista, (rect_pista.x + rect_pista.w//2 - img_pista.get_width()//2, rect_pista.y + rect_pista.h//2 - img_pista.get_height()//2))
+
+        # Botones de acción (debajo del botón de pista)
+        ANCHO_ACCION = 180
+        ALTO_ACCION = 60
+        espacio_btn = 30
+        y_accion = y_pista + ALTO_PISTA + 24
+        rect_borrar = pygame.Rect(x_panel, y_accion, ANCHO_ACCION, ALTO_ACCION)
+        rect_aplicar = pygame.Rect(x_panel + ANCHO_ACCION + espacio_btn, y_accion, ANCHO_ACCION, ALTO_ACCION)
+
+        for rect, color, texto_btn in [
+            (rect_borrar, (220, 100, 100), "BORRAR"),
+            (rect_aplicar, (100, 180, 100), "APLICAR")
+        ]:
+            shadow_rect = rect.move(3, 3)
+            pygame.draw.rect(pantalla, (220, 210, 180), shadow_rect, border_radius=14)
+            pygame.draw.rect(pantalla, color, rect, border_radius=14)
+            img_btn = FUENTE_BOTON.render(texto_btn, True, (255, 255, 255))
+            pantalla.blit(img_btn, (rect.x + rect.w//2 - img_btn.get_width()//2, rect.y + rect.h//2 - img_btn.get_height()//2))
+
+        # Mostrar mensaje de pista arriba de la tabla de palabras, a la derecha del título
+        if mensaje_pista and pygame.time.get_ticks() - mensaje_pista_tiempo < 4000:
+            img = FUENTE_BOTON.render(mensaje_pista, True, (100, 60, 180))
+            # Calcula la posición: a la derecha del título y encima de la tabla de palabras
+            x_msg = ancho // 2 + titulo.get_width() // 2 + 30
+            y_msg = 40  # Un poco debajo del título
+            pantalla.blit(img, (x_msg, y_msg))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
+                if boton_como_jugar.collidepoint(event.pos):
+                    ventana_como_jugar()
+                    continue
                 if BOTON_VOLVER.collidepoint(event.pos):
                     pygame.quit()
                     dirScript = os.path.dirname(os.path.abspath(__file__))
@@ -450,7 +679,6 @@ if __name__ == "__main__":
                             main_size = pantalla.get_size()
                             nombre_partida = pedir_nombre_partida(main_size)
                             guardar_partida(nombre_archivo="registroSopa.txt", usuario=usuario_actual, indice=None, nombre_partida=nombre_partida)
-                            # Buscar el índice de la nueva partida
                             indice_partida = obtener_indice_partida(usuario_actual, nombre_partida)
                         else:
                             guardar_partida(nombre_archivo="registroSopa.txt", usuario=usuario_actual, indice=indice_partida, nombre_partida=nombre_partida)
@@ -472,10 +700,18 @@ if __name__ == "__main__":
                                     indice_partida,
                                     nombre_partida
                                 )
-                                # Después de ventana_victoria, termina el bucle principal
                                 break
                         else:
                             seleccionadas.clear()
+                    elif rect_pista.collidepoint(event.pos):
+                        penalizacion = 30 * (2 ** usos_pista)
+                        tiempo_inicio -= penalizacion  # Aplica penalización siempre
+                        if ventana_cara_cruz():
+                            dar_pista()
+                            mostrar_mensaje_pista("¡Has ganado la pista!")
+                        else:
+                            mostrar_mensaje_pista("¡No has ganado la pista!")
+                        usos_pista += 1
                     else:
                         manejar_click(event.pos)
 
