@@ -1,0 +1,71 @@
+=== PARTIDA ===
+USUARIO:moremygoat
+NOMBRE:test
+LETRA_GENERADA:f
+LETRAS_JUGABLES:o,p,a,f,d,m,i
+PALABRAS_DICCIONARIO:off,ofidio,mafia,fiado,afamado,paf,pifia,adiafa,fofo,fado,difamado,pafio,fimo,fada,fai,fido,fama,mofa,difamia,daifa
+PALABRAS_CORRECTAS:off,mafia,fofo,fiado,fai,mofa
+PUNTAJE:28
+TIEMPO:106
+LETRAS_INICIALES:o:1,m:2,f:3,a:0,p:0,d:0
+PALABRAS_POR_LETRA:o:off|ofidio,m:mafia|mofa,f:fiado|fofo|fado|fimo|fada|fai|fido|fama,a:afamado|adiafa,p:paf|pifia|pafio,d:difamado|difamia|daifa
+FINALIZADA:NO
+=== FIN PARTIDA ===
+=== PARTIDA ===
+USUARIO:anonimo
+NOMBRE:test
+LETRA_GENERADA:n
+LETRAS_JUGABLES:n,a,o,e,l,t,j
+PALABRAS_DICCIONARIO:nota,tona,ano,anjeo,nen,ajonje,tolano,tonteo,atento,anea,lojano,neonato,tono,naja,tena,anta,naonato,jaloneo,lana,nato
+PALABRAS_CORRECTAS:naja
+PUNTAJE:6
+TIEMPO:21
+LETRAS_INICIALES:n:1,t:0,a:0,l:0,j:0
+PALABRAS_POR_LETRA:n:nota|nen|neonato|naja|naonato|nato,t:tona|tolano|tonteo|tono|tena,a:ano|anjeo|ajonje|atento|anea|anta,l:lojano|lana,j:jaloneo
+FINALIZADA:NO
+=== FIN PARTIDA ===
+=== PARTIDA ===
+USUARIO:anonimo
+NOMBRE:test2
+LETRA_GENERADA:m
+LETRAS_JUGABLES:t,o,l,a,n,s,m
+PALABRAS_DICCIONARIO:mamoso,nomon,sms,amanal,almosna,mota,salma,toma,tomo,manolo,soma,malato,alma,manso,moto,saloma,manato,manta,otomano,masa
+PALABRAS_CORRECTAS:manato
+PUNTAJE:3
+PUNTAJES_PALABRAS:manato:3
+TIEMPO:16
+LETRAS_INICIALES:m:1,n:0,s:0,a:0,t:0,o:0
+PALABRAS_POR_LETRA:m:mamoso|mota|manolo|malato|manso|moto|manato|manta|masa,n:nomon,s:sms|salma|soma|saloma,a:amanal|almosna|alma,t:toma|tomo,o:otomano
+PUNTOS_GASTADOS:0
+FINALIZADA:NO
+=== FIN PARTIDA ===
+=== PARTIDA ===
+USUARIO:anonimo
+NOMBRE:ganartest
+LETRA_GENERADA:n
+LETRAS_JUGABLES:r,u,o,e,n,g,m
+PALABRAS_DICCIONARIO:negrero,nomon
+PALABRAS_CORRECTAS:negrero,nomon
+PUNTAJE:15
+PUNTAJES_PALABRAS:negrero:8,nomon:7
+TIEMPO:13
+LETRAS_INICIALES:n:2
+PALABRAS_POR_LETRA:n:negrero|nomon
+PUNTOS_GASTADOS:0
+FINALIZADA:SI
+=== FIN PARTIDA ===
+=== PARTIDA ===
+USUARIO:anonimo
+NOMBRE:test3
+LETRA_GENERADA:a
+LETRAS_JUGABLES:r,m,a,n,i,t,e
+PALABRAS_DICCIONARIO:tarama,tarima
+PALABRAS_CORRECTAS:tarama,tarima
+PUNTAJE:16
+PUNTAJES_PALABRAS:tarama:8,tarima:8
+TIEMPO:12
+LETRAS_INICIALES:t:2
+PALABRAS_POR_LETRA:t:tarama|tarima
+PUNTOS_GASTADOS:0
+FINALIZADA:SI
+=== FIN PARTIDA ===

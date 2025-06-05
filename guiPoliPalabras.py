@@ -90,7 +90,8 @@ def cargar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, indi
         tiempo_guardado = 0
         letras_iniciales = {}
         palabras_por_letra = {}
-
+        puntajes_palabras = {}
+        puntos_gastados = 0
         for linea in datos:
             if linea.startswith("LETRA_GENERADA:"):
                 letra_generada = linea.split(":")[1].strip()
@@ -117,7 +118,18 @@ def cargar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, indi
                         if ":" in par:
                             letra, pals = par.split(":")
                             palabras_por_letra[letra] = pals.split("|") if pals else []
-
+            elif linea.startswith("PUNTAJES_PALABRAS:"):
+                partes = linea.split(":", 1)[1].strip()
+                if partes:
+                    for par in partes.split(","):
+                        if ":" in par:
+                            palabra, puntaje = par.rsplit(":", 1)
+                            try:
+                                puntajes_palabras[palabra] = int(puntaje)
+                            except:
+                                puntajes_palabras[palabra] = 0
+            elif linea.startswith("PUNTOS_GASTADOS:"):
+                puntos_gastados = int(linea.split(":")[1].strip())
         # Si no se guardó PALABRAS_POR_LETRA, reconstruirlo desde palabras
         if not palabras_por_letra and palabras:
             for palabra in palabras:
@@ -125,7 +137,7 @@ def cargar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, indi
                     letra = palabra[0]
                     palabras_por_letra.setdefault(letra, []).append(palabra)
 
-        return letra_generada, letras_jugables, palabras_correctas, tiempo_guardado, palabras, letras_iniciales, palabras_por_letra
+        return letra_generada, letras_jugables, palabras_correctas, tiempo_guardado, palabras, letras_iniciales, palabras_por_letra, puntajes_palabras,puntos_gastados
 
 # Función para guardar una partida en archivo
 def guardar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, indice=None, juego=None, tiempo_transcurrido=0, nombre=None, finalizada="NO"):
@@ -149,20 +161,29 @@ def guardar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, ind
             f"{letra}:{'|'.join(juego.palabrasPorLetra[letra])}" for letra in juego.palabrasPorLetra
         )
 
-    # Calcula el puntaje total
+    # Serializa los puntajes de palabras acertadas
+    puntajes_palabras_str = ""
+    if hasattr(juego, "puntajes_palabras") and juego.puntajes_palabras:
+        puntajes_palabras_str = ",".join(f"{pal}:{juego.puntajes_palabras[pal]}" for pal in juego.palabrasCorrectas if pal in juego.puntajes_palabras)
+
     total_puntos = sum(juego.puntajes_palabras.get(p, 0) for p in juego.palabrasCorrectas)
+    puntos_gastados = getattr(juego, "puntos_gastados", 0)
+    total_puntos -= puntos_gastados
     registro = f"USUARIO:{usuario}\n"
     registro += f"NOMBRE:{nombre}\n"
     registro += f"LETRA_GENERADA:{juego.letraGenerada}\n"
     registro += f"LETRAS_JUGABLES:{','.join(juego.letrasJugables)}\n"
     registro += f"PALABRAS_DICCIONARIO:{','.join(juego.palabras)}\n"
     registro += f"PALABRAS_CORRECTAS:{','.join(juego.palabrasCorrectas)}\n"
-    registro += f"PUNTAJE:{total_puntos}\n"  
+    registro += f"PUNTAJE:{total_puntos}\n"
+    if puntajes_palabras_str:
+        registro += f"PUNTAJES_PALABRAS:{puntajes_palabras_str}\n"
     registro += f"TIEMPO:{int(tiempo_transcurrido)}\n"
     if letras_iniciales_str:
         registro += f"LETRAS_INICIALES:{letras_iniciales_str}\n"
     if palabras_por_letra_str:
         registro += f"PALABRAS_POR_LETRA:{palabras_por_letra_str}\n"
+    registro += f"PUNTOS_GASTADOS:{puntos_gastados}\n"
     registro += f"FINALIZADA:{finalizada}\n"
     registro += "=== FIN PARTIDA ===\n\n"
 
@@ -327,6 +348,7 @@ class juegoUI:
         self.palabra_pista = ""
         self.pista_actual = ""
         self.crearBotones()
+        self.puntos_gastados = 0
 
     # Crea los botones hexagonales de letras
     def crearBotones(self):
@@ -552,6 +574,7 @@ class juegoUI:
                     self.mensaje = "¡Necesitas al menos 5 puntos para pedir una pista!"
                     self.mensajeTemp = pygame.time.get_ticks()
                 else:
+                    self.puntos_gastados += 5
                     puntos_a_restar = 5
                     palabras_ordenadas = list(self.juego.palabrasCorrectas)[::-1]
                     for palabra in palabras_ordenadas:
@@ -689,7 +712,7 @@ class juegoUI:
             tiempo_transcurrido=int(self.tiempoTranscurrido),
             nombre=nombre_partida,
             finalizada="SI"
-        )
+        ) 
         ANCHO, ALTO = 700, 480
         ventana = pygame.display.set_mode((ANCHO, ALTO))
         fuente_titulo = pygame.font.Font("dalek_pinpoint/DalekPinpointBold.ttf", 64)
@@ -698,7 +721,9 @@ class juegoUI:
         corona_img = pygame.image.load("coronaganar.png")
         corona_img = pygame.transform.scale(corona_img, (180, 180))
         boton_menu = pygame.Rect(ANCHO//2 - 170, ALTO - 120, 340, 80)
-        total_puntos = sum(self.juego.puntajes_palabras.get(p, 0) for p in self.juego.palabrasCorrectas)
+        total_bruto = sum(self.juego.puntajes_palabras.get(p, 0) for p in self.juego.palabrasCorrectas)
+        total_neto = total_bruto - getattr(self.juego, "puntos_gastados", 0)
+
         esperando = True
         while esperando:
             draw_gradient(ventana, COLOR_FONDO, (220, 220, 210), ANCHO, ALTO)
@@ -707,7 +732,13 @@ class juegoUI:
             ventana.blit(corona_img, (ANCHO//2 - 90, 60))
             texto = fuente_titulo.render("¡Ganaste!", True, COLOR_BOTON)
             ventana.blit(texto, (ANCHO//2 - texto.get_width()//2, 260))
-            texto_puntaje = fuente_puntaje.render(f"Puntaje: {total_puntos}", True, (0, 100, 0))
+            texto_puntaje = fuente_puntaje.render(f"Puntaje: {total_neto}", True, (0, 100, 0))
+            ventana.blit(texto_puntaje, (ANCHO//2 - texto_puntaje.get_width()//2, 320))
+    
+            if getattr(self.juego, "puntos_gastados", 0) > 0:
+                texto_gastado = fuente_puntaje.render(f"(Gastado: {self.juego.puntos_gastados})", True, (100, 0, 0))
+                ventana.blit(texto_gastado, (ANCHO//2 - texto_gastado.get_width()//2, 360))
+
             ventana.blit(texto_puntaje, (ANCHO//2 - texto_puntaje.get_width()//2, 320))
             pygame.draw.rect(ventana, COLOR_BOTON2, boton_menu, border_radius=16)
             pygame.draw.rect(ventana, (40, 80, 120), boton_menu, 3, border_radius=16)
@@ -735,25 +766,36 @@ def main():
     else:
         partida = False
     if partida:
-        letra_generada, letras_jugables, palabras_correctas, tiempo_guardado, palabras, letras_iniciales, palabras_por_letra = partida
+        if len(partida) == 9:
+            letra_generada, letras_jugables, palabras_correctas, tiempo_guardado, palabras, letras_iniciales, palabras_por_letra, puntajes_palabras,puntos_gastados = partida
+        else:
+            letra_generada, letras_jugables, palabras_correctas, tiempo_guardado, palabras, letras_iniciales, palabras_por_letra = partida
+            puntajes_palabras = {}
         juego.letraGenerada = letra_generada
         juego.letrasJugables = letras_jugables
         juego.palabrasCorrectas = palabras_correctas
         juego.palabras = palabras
         juego.letrasIniciales = letras_iniciales
         juego.palabrasPorLetra = palabras_por_letra
-        print(juego.palabras)
-        print(len(juego.palabras))
+        juego.puntajes_palabras = puntajes_palabras if puntajes_palabras else {}
+        juego.puntos_gastados = puntos_gastados
+        for palabra in palabras_correctas:
+            if palabra not in juego.puntajes_palabras:
+                puntaje = sum(logicaPoliPalabras.VALORES_LETRAS.get(letra, 0) for letra in palabra)
+                juego.puntajes_palabras[palabra] = puntaje
     else:
         juego.letraGenerada = juego.generarLetra()
         juego.generarLetrasJugables()
         juego.obtenerPalabras()
         juego.disminuirPalabras(20)
         juego.guardarLetrasIniciales()
+        juego.puntajes_gastados = 0
         print(juego.palabras)
     UIjuego = juegoUI(juego)
+
     if indice_partida is not None and partida:
         UIjuego.tiempoInicio = time.time() - tiempo_guardado
+        UIjuego.puntos_gastados = puntos_gastados
     reloj = pygame.time.Clock()
     ejecutando = True
     while ejecutando:
@@ -776,5 +818,3 @@ def main():
 # Ejecuta el juego si este archivo es el principal
 if __name__ == "__main__":
     main()
-
-

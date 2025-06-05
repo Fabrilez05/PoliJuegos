@@ -305,20 +305,23 @@ def guardar_partida(nombre_archivo="registroSopa.txt", usuario=None, indice=None
 
 # --- Solicita al usuario el nombre de la partida mediante una ventana ---
 def pedir_nombre_partida(main_size):
-    import pygame
-    ventana = pygame.display.set_mode((400, 180))
-    fuente = pygame.font.SysFont(None, 32)
-    input_box = pygame.Rect(50, 60, 300, 40)
-    boton_guardar = pygame.Rect(150, 120, 100, 40)
-    color_inactive = pygame.Color('lightskyblue3')
-    color_active = pygame.Color('dodgerblue2')
+    ANCHO_VENTANA = 700
+    ALTO_VENTANA = 320
+    ventana = pygame.display.set_mode((ANCHO_VENTANA, ALTO_VENTANA))
+    fuente = pygame.font.Font("augustus/AUGUSTUS.ttf", 30)
+    input_box = pygame.Rect(80, 110, 540, 60)
+    boton_guardar = pygame.Rect(140, 210, 420, 60)
+    color_inactive = (220, 210, 180)
+    color_active = (100, 180, 100)
     color = color_inactive
     active = False
     text = ''
     done = False
+
     while not done:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                pygame.display.set_mode(main_size)
                 return "SinNombre"
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if input_box.collidepoint(event.pos):
@@ -336,16 +339,18 @@ def pedir_nombre_partida(main_size):
                 else:
                     if len(text) < 20:
                         text += event.unicode
-        ventana.fill((240,240,240))
-        txt_surface = fuente.render("Nombre de la partida:", True, (0,0,0))
-        ventana.blit(txt_surface, (50, 20))
-        pygame.draw.rect(ventana, color, input_box, 2)
-        txt_surface2 = fuente.render(text, True, (0,0,0))
-        ventana.blit(txt_surface2, (input_box.x+5, input_box.y+8))
-        pygame.draw.rect(ventana, (100,180,100), boton_guardar)
-        txt_guardar = fuente.render("Guardar", True, (255,255,255))
-        ventana.blit(txt_guardar, (boton_guardar.x + boton_guardar.w//2 - txt_guardar.get_width()//2, boton_guardar.y + 8))
+
+        ventana.fill((245, 245, 240))
+        txt_surface = fuente.render("NOMBRE DE LA PARTIDA:", True, (44, 62, 80))
+        ventana.blit(txt_surface, (ANCHO_VENTANA//2 - txt_surface.get_width()//2, 10))
+        pygame.draw.rect(ventana, color, input_box, 2, border_radius=14)
+        txt_surface2 = fuente.render(text, True, (44, 62, 80))
+        ventana.blit(txt_surface2, (input_box.x+16, input_box.y+14))
+        pygame.draw.rect(ventana, (212, 175, 55), boton_guardar, border_radius=18)
+        txt_guardar = fuente.render("GUARDAR PARTIDA", True, (44, 62, 80))
+        ventana.blit(txt_guardar, (boton_guardar.x + boton_guardar.w//2 - txt_guardar.get_width()//2, boton_guardar.y + 10))
         pygame.display.flip()
+
     pygame.display.set_mode(main_size)
     return text if text else "SinNombre"
 
