@@ -22,6 +22,7 @@ COLOR_BOTON_TEXTO = (44, 62, 80)
 COLOR_CASILLA = (255, 255, 255)
 COLOR_CASILLA_SELEC = (173, 216, 230)
 COLOR_SOMBRA = (220, 210, 180)
+COLOR_FONDO_LISTA = (230, 230, 210)
 
 # --- Inicialización de pygame y fuentes ---
 pygame.init()
@@ -360,32 +361,42 @@ def ventana_victoria(palabras_encontradas, tiempo_total, usuario_actual, indice_
     import sys
     import os
     import subprocess
-    ANCHO, ALTO = 500, 400
+
+    ANCHO, ALTO = 1100, 720
     pantalla_victoria = pygame.display.set_mode((ANCHO, ALTO))
-    fuente_titulo = pygame.font.SysFont(None, 48)
-    fuente = pygame.font.SysFont(None, 32)
-    fuente_btn = pygame.font.SysFont(None, 28)
-    boton_menu = pygame.Rect(80, 320, 150, 50)
-    boton_salir = pygame.Rect(270, 320, 150, 50)
-    while True:
-        pantalla_victoria.fill((240, 240, 240))
-        titulo = fuente_titulo.render("¡GANASTE!", True, (0, 120, 0))
-        pantalla_victoria.blit(titulo, (ANCHO//2 - titulo.get_width()//2, 30))
-        subtitulo = fuente.render("Palabras encontradas:", True, (0,0,0))
-        pantalla_victoria.blit(subtitulo, (40, 100))
-        for i, palabra in enumerate(palabras_encontradas):
-            txt = fuente.render(palabra, True, (0,0,0))
-            pantalla_victoria.blit(txt, (60, 130 + i*30))
-        minutos = tiempo_total // 60
-        segundos = tiempo_total % 60
-        tiempo_txt = fuente.render(f"Tiempo de juego: {minutos:02d}:{segundos:02d}", True, (0,0,0))
-        pantalla_victoria.blit(tiempo_txt, (40, 130 + len(palabras_encontradas)*30 + 20))
-        pygame.draw.rect(pantalla_victoria, (100,180,100), boton_menu)
-        pygame.draw.rect(pantalla_victoria, (180,100,100), boton_salir)
-        txt_menu = fuente_btn.render("Ir al menú", True, (255,255,255))
-        txt_salir = fuente_btn.render("Salir", True, (255,255,255))
-        pantalla_victoria.blit(txt_menu, (boton_menu.x + boton_menu.w//2 - txt_menu.get_width()//2, boton_menu.y + 12))
-        pantalla_victoria.blit(txt_salir, (boton_salir.x + boton_salir.w//2 - txt_salir.get_width()//2, boton_salir.y + 12))
+    fuente_titulo = pygame.font.Font("dalek_pinpoint/DalekPinpointBold.ttf", 80)
+    fuente_puntaje = pygame.font.Font("augustus/AUGUSTUS.ttf", 20)
+    fuente_boton = pygame.font.Font("augustus/AUGUSTUS.ttf", 30)
+    corona_img = pygame.image.load("coronaganar.png")
+    corona_img = pygame.transform.scale(corona_img, (260, 260))
+    boton_menu = pygame.Rect(ANCHO//2 - 250, ALTO - 170, 500, 110)
+
+    minutos = tiempo_total // 60
+    segundos = tiempo_total % 60
+
+    esperando = True
+    while esperando:
+        # Fondo
+        draw_gradient(pantalla_victoria, COLOR_FONDO, (220, 220, 210), ANCHO, ALTO)
+        pygame.draw.rect(pantalla_victoria, COLOR_FONDO_LISTA, (60, 60, ANCHO-120, ALTO-120), border_radius=36)
+        pygame.draw.rect(pantalla_victoria, COLOR_BOTON, (60, 60, ANCHO-120, ALTO-120), 5, border_radius=36)
+
+        # Corona y título
+        pantalla_victoria.blit(corona_img, (ANCHO//2 - 130, 80))
+        texto = fuente_titulo.render("¡Ganaste!", True, COLOR_BOTON)
+        pantalla_victoria.blit(texto, (ANCHO//2 - texto.get_width()//2, 360))
+
+        # Tiempo
+        texto_tiempo = fuente_puntaje.render(f"Tiempo: {minutos:02d}:{segundos:02d}", True, (0, 100, 0))
+        pantalla_victoria.blit(texto_tiempo, (ANCHO//2 - texto_tiempo.get_width()//2, 450))
+
+        # Botón de menú
+        pygame.draw.rect(pantalla_victoria, COLOR_BOTON2, boton_menu, border_radius=24)
+        pygame.draw.rect(pantalla_victoria, (40, 80, 120), boton_menu, 5, border_radius=24)
+        txt_menu = fuente_boton.render("Menú Principal", True, (255,255,255))
+        pantalla_victoria.blit(txt_menu, (boton_menu.x + boton_menu.width//2 - txt_menu.get_width()//2, boton_menu.y + boton_menu.height//2 - txt_menu.get_height()//2))
+
+        pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 guardar_partida(nombre_archivo="registroSopa.txt", usuario=usuario_actual, indice=indice_partida, nombre_partida=nombre_partida, finalizada=True, tiempo_final=tiempo_total)
@@ -399,11 +410,6 @@ def ventana_victoria(palabras_encontradas, tiempo_total, usuario_actual, indice_
                     pathMenu = os.path.join(dirScript, "guiMenu.py")
                     subprocess.run([sys.executable, pathMenu, usuario_actual])
                     sys.exit()
-                if boton_salir.collidepoint(event.pos):
-                    guardar_partida(nombre_archivo="registroSopa.txt", usuario=usuario_actual, indice=indice_partida, nombre_partida=nombre_partida, finalizada=True, tiempo_final=tiempo_total)
-                    pygame.quit()
-                    sys.exit()
-        pygame.display.flip()
 
 # --- Busca el índice de una partida guardada por usuario y nombre ---
 def obtener_indice_partida(usuario, nombre_partida, nombre_archivo="registroSopa.txt"):
