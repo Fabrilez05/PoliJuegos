@@ -5,8 +5,9 @@ import os
 
 pygame.init()
 
+# --- Configuración de la ventana y colores principales ---
 PANTALLA_ANCHO = 1280
-PANTALLA_ALTO = 760  # Un poco más alto para mejor espaciado
+PANTALLA_ALTO = 760
 
 COLOR_FONDO = (245, 245, 240)  # Mármol claro
 COLOR_TEXTO = (44, 62, 80)     # Gris piedra
@@ -20,13 +21,14 @@ COLOR_LINK = (30, 60, 150)            # Azul clásico
 pantalla = pygame.display.set_mode((PANTALLA_ANCHO, PANTALLA_ALTO))
 pygame.display.set_caption("Juegos De Letras - Menu Principal")
 
-# Usa las mismas fuentes que login/register
+# --- Fuentes personalizadas ---
 fuenteTitulo = pygame.font.Font("dalek_pinpoint/DalekPinpointBold.ttf", 64)
 fuenteBoton = pygame.font.Font("augustus/AUGUSTUS.ttf", 44)
 fuenteUsuario = pygame.font.Font("augustus/AUGUSTUS.ttf", 28)
 
 usuario_actual = sys.argv[1] if len(sys.argv) > 1 else None
 
+# --- Clase para botones del menú principal ---
 class Boton:
     def __init__(self, x, y, ancho, alto, texto, color, colorHover):
         self.rect = pygame.Rect(x, y, ancho, alto)
@@ -36,6 +38,7 @@ class Boton:
         self.estaHover = False
 
     def dibujar(self, superficie):
+        # Dibuja el botón con sombra y texto centrado
         color = self.ColorHover if self.estaHover else self.Color
         shadow_rect = self.rect.move(4, 4)
         pygame.draw.rect(superficie, (220, 210, 180), shadow_rect, border_radius=16)
@@ -46,12 +49,15 @@ class Boton:
         superficie.blit(textoSuperficie, textoRect)
 
     def checkHover(self, pos):
+        # Cambia el estado hover según la posición del mouse
         self.estaHover = self.rect.collidepoint(pos)
         return self.estaHover
 
     def estaClickeado(self, pos, evento):
+        # Devuelve True si el botón fue clickeado
         return evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1 and self.rect.collidepoint(pos)
 
+# --- Dibuja un degradado vertical en la pantalla ---
 def draw_gradient(surface, color1, color2, ancho, alto):
     for y in range(alto):
         ratio = y / alto
@@ -60,12 +66,14 @@ def draw_gradient(surface, color1, color2, ancho, alto):
         b = int(color1[2] * (1 - ratio) + color2[2] * ratio)
         pygame.draw.line(surface, (r, g, b), (0, y), (ancho, y))
 
+# --- Menú principal: muestra los botones principales y maneja navegación ---
 def menu_Main():
     botonAncho = 600
     botonAlto = 80
     botonX = PANTALLA_ANCHO // 2 - botonAncho // 2
     espacio_vertical = 60
 
+    # Botones principales
     botonJugarPolipalabras = Boton(
         botonX,
         260,
@@ -84,7 +92,6 @@ def menu_Main():
         COLOR_BOTON,
         COLOR_BOTON_HOVER
     )
-    # Nuevo botón Mejores Jugadores
     botonMejores = Boton(
         botonX,
         260 + 2 * (botonAlto + espacio_vertical),
@@ -95,6 +102,7 @@ def menu_Main():
         COLOR_BOTON_HOVER
     )
 
+    # Botón para cerrar sesión
     boton_cerrar = pygame.Rect(PANTALLA_ANCHO // 2 - 120, 260 + 3 * (botonAlto + espacio_vertical), 240, 60)
 
     ejecutar = True
@@ -105,6 +113,7 @@ def menu_Main():
             if evento.type == pygame.QUIT:
                 ejecutar = False
 
+            # Acciones de los botones principales
             if botonJugarPolipalabras.estaClickeado(posMouse, evento):
                 pygame.quit()
                 try:
@@ -138,8 +147,8 @@ def menu_Main():
             if botonMejores.estaClickeado(posMouse, evento):
                 ventana_elegir_juego_mejores()
                 pygame.display.set_mode((PANTALLA_ANCHO, PANTALLA_ALTO))
-                # NO return aquí, así el menú sigue funcionando
 
+            # Botón cerrar sesión
             if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
                 if boton_cerrar.collidepoint(evento.pos):
                     pygame.quit()
@@ -148,19 +157,20 @@ def menu_Main():
                     subprocess.run([sys.executable, pathLogin])
                     sys.exit()
 
+        # Actualiza el estado hover de los botones
         botonJugarPolipalabras.checkHover(posMouse)
         botonPolisopa.checkHover(posMouse)
         botonMejores.checkHover(posMouse)
 
-        # Fondo degradado mármol
+        # Fondo degradado mármol y línea decorativa
         draw_gradient(pantalla, (245, 245, 240), (220, 220, 210), PANTALLA_ANCHO, PANTALLA_ALTO)
         pygame.draw.line(pantalla, COLOR_BOTON, (120, 160), (PANTALLA_ANCHO-120, 160), 5)
 
-        # Título centrado, fuente grande
+        # Título centrado
         textoTitulo = fuenteTitulo.render("Poli Juegos", True, COLOR_BOTON)
         pantalla.blit(textoTitulo, (PANTALLA_ANCHO // 2 - textoTitulo.get_width() // 2, 70))
 
-        # Botones con sombra
+        # Dibuja los botones principales con sombra
         for boton in [botonJugarPolipalabras, botonPolisopa, botonMejores]:
             shadow_rect = boton.rect.move(4, 4)
             pygame.draw.rect(pantalla, (220, 210, 180), shadow_rect, border_radius=16)
@@ -185,6 +195,7 @@ def menu_Main():
     pygame.quit()
     sys.exit()
 
+# --- Verifica si el usuario tiene partidas guardadas ---
 def hay_partidas_usuario(nombre_archivo, usuario):
     if not os.path.exists(nombre_archivo):
         return False
@@ -195,11 +206,12 @@ def hay_partidas_usuario(nombre_archivo, usuario):
                 return True
     return False
 
+# --- Ventana para elegir el juego del ranking de mejores jugadores ---
 def ventana_elegir_juego_mejores():
     ANCHO, ALTO = 600, 340
     ventana = pygame.display.set_mode((ANCHO, ALTO))
     fuente_titulo = pygame.font.Font("dalek_pinpoint/DalekPinpointBold.ttf", 38)
-    fuente_boton = pygame.font.Font("augustus/AUGUSTUS.ttf", 22)  # Más pequeña aún
+    fuente_boton = pygame.font.Font("augustus/AUGUSTUS.ttf", 22)
     boton_palabras = pygame.Rect(80, 120, 200, 70)
     boton_sopa = pygame.Rect(320, 120, 200, 70)
     boton_cerrar = pygame.Rect(ANCHO//2 - 80, ALTO - 70, 160, 48)
@@ -234,6 +246,7 @@ def ventana_elegir_juego_mejores():
                     return
         pygame.display.flip()
 
+# --- Ventana que muestra el ranking de mejores jugadores para cada juego ---
 def ventana_mejores_jugadores(juego):
     ANCHO, ALTO = 700, 600
     ventana = pygame.display.set_mode((ANCHO, ALTO))
@@ -244,7 +257,7 @@ def ventana_mejores_jugadores(juego):
 
     x_pos = [80, 320, 540]
 
-    # Leer mejores jugadores
+    # Leer mejores jugadores de archivo según el juego
     if juego == "polipalabras":
         archivo = "registroPoliPalabras.txt"
         mejores = []
@@ -312,9 +325,8 @@ def ventana_mejores_jugadores(juego):
 
         # Encabezados alineados por la parte superior (top)
         encabezados = ["POSICION", "USUARIO", "PUNTAJE" if juego=="polipalabras" else "TIEMPO"]
-        # Calcula la altura máxima de los encabezados para alinearlos todos igual
         enc_surfs = [fuente.render(enc, True, COLOR_TEXTO) for enc in encabezados]
-        enc_y = 100  # Fijo para todos
+        enc_y = 100
         for i, surf in enumerate(enc_surfs):
             ventana.blit(surf, (x_pos[i] + 60 - surf.get_width()//2, enc_y))
 

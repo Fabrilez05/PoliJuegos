@@ -5,17 +5,8 @@ import os
 
 pygame.init()
 
-usuario_actual = sys.argv[1]
-juego = sys.argv[2]  # "polisopa" o el nombre que uses para el otro juego
-
-if juego == "polisopa":
-    pathJuego = os.path.join(os.path.dirname(__file__), "guiPoliSopa.py")
-    registro = os.path.join(os.path.dirname(__file__), "registroSopa.txt")
-else:
-    pathJuego = os.path.join(os.path.dirname(__file__), "guiPoliPalabras.py")
-    registro = os.path.join(os.path.dirname(__file__), "registroPoliPalabras.txt")
-
-ANCHO, ALTO = 800, 600  # Más grande para mejor estética y espacio
+# --- Configuración de la ventana y colores principales ---
+ANCHO, ALTO = 800, 600  # Tamaño de ventana
 COLOR_FONDO = (245, 245, 240)  # Mármol claro
 COLOR_BOTON = (212, 175, 55)   # Dorado
 COLOR_BOTON2 = (100, 100, 180) # Azul clásico
@@ -29,6 +20,19 @@ FUENTE_LISTA = pygame.font.Font("augustus/AUGUSTUS.ttf", 24)
 pantalla = pygame.display.set_mode((ANCHO, ALTO))
 pygame.display.set_caption("Selecciona una opción")
 
+# --- Obtiene argumentos de usuario y juego ---
+usuario_actual = sys.argv[1]
+juego = sys.argv[2]
+
+# --- Determina rutas de scripts y archivos según el juego seleccionado ---
+if juego == "polisopa":
+    pathJuego = os.path.join(os.path.dirname(__file__), "guiPoliSopa.py")
+    registro = os.path.join(os.path.dirname(__file__), "registroSopa.txt")
+else:
+    pathJuego = os.path.join(os.path.dirname(__file__), "guiPoliPalabras.py")
+    registro = os.path.join(os.path.dirname(__file__), "registroPoliPalabras.txt")
+
+# --- Dibuja un degradado vertical en la pantalla ---
 def draw_gradient(surface, color1, color2, ancho, alto):
     for y in range(alto):
         ratio = y / alto
@@ -37,6 +41,7 @@ def draw_gradient(surface, color1, color2, ancho, alto):
         b = int(color1[2] * (1 - ratio) + color2[2] * ratio)
         pygame.draw.line(surface, (r, g, b), (0, y), (ancho, y))
 
+# --- Devuelve una lista con los nombres de las partidas guardadas del usuario ---
 def obtener_partidas_usuario(registro, usuario):
     if not os.path.exists(registro):
         return []
@@ -57,11 +62,12 @@ def obtener_partidas_usuario(registro, usuario):
                 partidas.append(nombre)
         return partidas
 
+# --- Muestra una lista de partidas guardadas para seleccionar una ---
 def ventana_lista_partidas(partidas):
     seleccion = None
     scroll = 0
     max_visible = 4
-    lista_ancho = 600  # Más ancho, casi toda la ventana
+    lista_ancho = 600
     lista_x = (ANCHO - lista_ancho) // 2
     item_alto = 64
     espacio_y = 24
@@ -122,9 +128,10 @@ def ventana_lista_partidas(partidas):
         pygame.display.flip()
     return seleccion
 
+# --- Menú principal de carga: permite elegir entre nueva partida o cargar una guardada ---
 def main():
-    boton_ancho = 340   # Más ancho
-    boton_alto = 100    # Más alto
+    boton_ancho = 340
+    boton_alto = 100
     boton_nueva = pygame.Rect(ANCHO//2 - boton_ancho - 40, 320, boton_ancho, boton_alto)
     boton_cargar = pygame.Rect(ANCHO//2 + 40, 320, boton_ancho, boton_alto)
     while True:

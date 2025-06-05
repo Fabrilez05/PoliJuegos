@@ -41,6 +41,11 @@
 
 
 
+
+
+
+
+
 USUARIO:ale
 8,10
 WGBAAUIPIH
@@ -66,6 +71,11 @@ TIEMPO:
 === FIN PARTIDA ===
 
 === PARTIDA ===
+
+
+
+
+
 
 
 
@@ -175,6 +185,11 @@ TIEMPO:
 
 
 
+
+
+
+
+
 USUARIO:ale
 8,10
 DOOAEGDGTL
@@ -201,6 +216,11 @@ TIEMPO:
 === FIN PARTIDA ===
 
 === PARTIDA ===
+
+
+
+
+
 
 
 
@@ -307,6 +327,11 @@ TIEMPO:18
 
 
 
+
+
+
+
+
 USUARIO:ale
 NOMBRE:partidaa
 8,10
@@ -332,6 +357,11 @@ TIEMPO:27
 === FIN PARTIDA ===
 
 === PARTIDA ===
+
+
+
+
+
 
 
 
@@ -415,6 +445,11 @@ TIEMPO:30
 
 
 
+
+
+
+
+
 USUARIO:ale
 NOMBRE:dddx
 8,10
@@ -469,6 +504,11 @@ TIEMPO:38
 
 
 
+
+
+
+
+
 USUARIO:ale
 NOMBRE:weqew
 8,10
@@ -493,6 +533,11 @@ TIEMPO:24
 === FIN PARTIDA ===
 
 === PARTIDA ===
+
+
+
+
+
 
 
 
@@ -583,6 +628,11 @@ TIEMPO:8
 
 
 
+
+
+
+
+
 USUARIO:ale
 NOMBRE:SinNombre
 FINALIZADA:SI
@@ -615,6 +665,11 @@ TIEMPO:110
 === FIN PARTIDA ===
 
 === PARTIDA ===
+
+
+
+
+
 
 
 
@@ -704,6 +759,11 @@ TIEMPO:110
 
 
 
+
+
+
+
+
 USUARIO:ale
 NOMBRE:aaaaaan
 8,10
@@ -730,6 +790,11 @@ TIEMPO:41
 === FIN PARTIDA ===
 
 === PARTIDA ===
+
+
+
+
+
 
 
 
@@ -803,6 +868,11 @@ TIEMPO:20
 
 
 
+
+
+
+
+
 USUARIO:ale
 NOMBRE:asdxxxxx
 8,10
@@ -827,6 +897,11 @@ TIEMPO:23
 === FIN PARTIDA ===
 
 === PARTIDA ===
+
+
+
+
+
 
 
 
@@ -899,6 +974,11 @@ TIEMPO:134
 
 
 
+
+
+
+
+
 USUARIO:ale
 NOMBRE:nose
 8,10
@@ -930,6 +1010,11 @@ TIEMPO:111
 === FIN PARTIDA ===
 
 === PARTIDA ===
+
+
+
+
+
 
 
 
@@ -991,6 +1076,11 @@ TIEMPO:263
 
 
 
+
+
+
+
+
 USUARIO:ale
 NOMBRE:porfavorqande
 FINALIZADA:SI
@@ -1036,6 +1126,11 @@ TIEMPO:152
 
 
 
+
+
+
+
+
 USUARIO:ale
 NOMBRE:siandolaprimeravez
 8,10
@@ -1060,6 +1155,11 @@ TIEMPO:9
 === FIN PARTIDA ===
 
 === PARTIDA ===
+
+
+
+
+
 
 
 
@@ -1114,6 +1214,11 @@ TIEMPO:112
 
 
 
+
+
+
+
+
 USUARIO:ale
 NOMBRE:a-sd
 8,10
@@ -1138,6 +1243,11 @@ TIEMPO:9
 === FIN PARTIDA ===
 
 === PARTIDA ===
+
+
+
+
+
 
 
 
@@ -1178,6 +1288,11 @@ TIEMPO:4
 
 
 
+
+
+
+
+
 USUARIO:ale
 NOMBRE:1
 8,10
@@ -1202,6 +1317,11 @@ TIEMPO:10
 === FIN PARTIDA ===
 
 === PARTIDA ===
+
+
+
+
+
 
 
 
@@ -1237,6 +1357,11 @@ TIEMPO:9
 
 
 
+
+
+
+
+
 USUARIO:ale
 NOMBRE:intent1
 8,10
@@ -1261,6 +1386,11 @@ TIEMPO:12
 === FIN PARTIDA ===
 
 === PARTIDA ===
+
+
+
+
+
 
 
 
@@ -1290,6 +1420,11 @@ TIEMPO:18
 === PARTIDA ===
 
 
+
+
+
+
+
 USUARIO:anonimo
 NOMBRE:SinNombre
 8,10
@@ -1314,6 +1449,11 @@ TIEMPO:3
 === FIN PARTIDA ===
 
 === PARTIDA ===
+
+
+
+
+
 USUARIO:ale
 NOMBRE:kwmqdplkmdamdk
 8,10
@@ -1336,5 +1476,37 @@ RETRIBUIR
 ENCONTRADAS:
 MARAGATO
 TIEMPO:150
+=== FIN PARTIDA ===
+
+=== PARTIDA ===
+USUARIO:pruebafinal1
+NOMBRE:ola
+FINALIZADA:SI
+8,10
+ZSERDBMPJP
+AFSTEAAEGU
+NEIASDCRED
+OKAHYAOAZQ
+LEAREACNNP
+BCSEMFEEZE
+ARAQALTAÑY
+WAMERÑUFEÑ
+PALABRAS:
+AMASAR
+FAENAR
+FACETA
+ATRESIA
+CAMBADA
+DESYEMAR
+BARCELONA
+ENCONTRADAS:
+AMASAR
+FAENAR
+FACETA
+ATRESIA
+CAMBADA
+DESYEMAR
+BARCELONA
+TIEMPO:376
 === FIN PARTIDA ===
 
