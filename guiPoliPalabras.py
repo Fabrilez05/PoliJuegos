@@ -128,7 +128,7 @@ def cargar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, indi
         return letra_generada, letras_jugables, palabras_correctas, tiempo_guardado, palabras, letras_iniciales, palabras_por_letra
 
 # Función para guardar una partida en archivo
-def guardar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, indice=None, juego=None, tiempo_transcurrido=0,nombre = None):
+def guardar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, indice=None, juego=None, tiempo_transcurrido=0, nombre=None, finalizada="NO"):
     # Lee todas las partidas existentes
     if not os.path.exists(nombre_archivo):
         partidas = []
@@ -136,7 +136,7 @@ def guardar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, ind
         with open(nombre_archivo, "r", encoding="utf-8") as f:
             contenido = f.read().split("=== PARTIDA ===")
             partidas = [p for p in contenido if p.strip()]
-    
+
     # Serializa letras_iniciales si existe
     letras_iniciales_str = ""
     if hasattr(juego, "letrasIniciales") and juego.letrasIniciales:
@@ -148,23 +148,26 @@ def guardar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, ind
         palabras_por_letra_str = ",".join(
             f"{letra}:{'|'.join(juego.palabrasPorLetra[letra])}" for letra in juego.palabrasPorLetra
         )
-    
-    # Construye el nuevo registro de partida
+
+    # Calcula el puntaje total
+    total_puntos = sum(juego.puntajes_palabras.get(p, 0) for p in juego.palabrasCorrectas)
     registro = f"USUARIO:{usuario}\n"
     registro += f"NOMBRE:{nombre}\n"
     registro += f"LETRA_GENERADA:{juego.letraGenerada}\n"
     registro += f"LETRAS_JUGABLES:{','.join(juego.letrasJugables)}\n"
     registro += f"PALABRAS_DICCIONARIO:{','.join(juego.palabras)}\n"
     registro += f"PALABRAS_CORRECTAS:{','.join(juego.palabrasCorrectas)}\n"
+    registro += f"PUNTAJE:{total_puntos}\n"  
     registro += f"TIEMPO:{int(tiempo_transcurrido)}\n"
     if letras_iniciales_str:
         registro += f"LETRAS_INICIALES:{letras_iniciales_str}\n"
     if palabras_por_letra_str:
         registro += f"PALABRAS_POR_LETRA:{palabras_por_letra_str}\n"
+    registro += f"FINALIZADA:{finalizada}\n"
     registro += "=== FIN PARTIDA ===\n\n"
-    
-    # Elimina cualquier partida previa del mismo usuario y nombre
+
     nuevas_partidas = []
+    actualizada = False
     for p in partidas:
         lineas = [line.strip() for line in p.strip().splitlines() if line.strip()]
         if not lineas:
@@ -174,23 +177,37 @@ def guardar_partida(nombre_archivo="registroPoliPalabras.txt", usuario=None, ind
             user = lineas[0].split(":",1)[1]
             if user == usuario:
                 es_misma = True
-        if not es_misma:
+        if es_misma and not actualizada:
+            # Si la partida existe y no ha sido actualizada, reemplaza FINALIZADA por el nuevo valor
+            nuevas_lineas = []
+            for linea in lineas:
+                if linea.startswith("FINALIZADA:"):
+                    nuevas_lineas.append(f"FINALIZADA:{finalizada}")
+                else:
+                    nuevas_lineas.append(linea)
+            nuevas_partidas.append('\n'.join(nuevas_lineas))
+            actualizada = True
+        elif not es_misma:
             nuevas_partidas.append(p)
-    
+    if not actualizada:
+        nuevas_partidas.append(registro)
+
     # Guarda todas las partidas en el archivo
     with open(nombre_archivo, "w", encoding="utf-8") as f:
-        for p in partidas:
-            f.write("=== PARTIDA ===\n" + p)
+        for p in nuevas_partidas:
+            f.write("=== PARTIDA ===\n" + p.strip() + "\n")
 
 # Función para pedir el nombre de la partida al usuario
 def pedir_nombre_partida(main_size):
     original_display = pygame.display.get_surface()
-    ventana = pygame.display.set_mode((400, 180))
-    fuente = pygame.font.SysFont("Arial", 32)
-    input_box = pygame.Rect(50, 60, 300, 40)
-    boton_guardar = pygame.Rect(150, 120, 100, 40)
-    color_inactive = pygame.Color('lightskyblue3')
-    color_active = pygame.Color('dodgerblue2')
+    ANCHO, ALTO = 500, 300
+    ventana = pygame.display.set_mode((ANCHO, ALTO))
+    fuente_titulo = pygame.font.Font("dalek_pinpoint/DalekPinpointBold.ttf", 32)
+    fuente = pygame.font.Font("augustus/AUGUSTUS.ttf", 28)
+    input_box = pygame.Rect(50, 130 , 300, 44)
+    boton_guardar = pygame.Rect(ANCHO//2 - 80, 200, 160, 44)
+    color_inactive = COLOR_BOTON
+    color_active = COLOR_BOTON2
     color = color_inactive
     active = False
     text = ''
@@ -215,20 +232,31 @@ def pedir_nombre_partida(main_size):
                 elif event.key == pygame.K_BACKSPACE:
                     text = text[:-1]
                 else:
-                    if len(text) < 20:
+                    if len(text) < 20 and event.unicode.isprintable():
                         text += event.unicode
 
-        ventana.fill((240,240,240))
-        txt_surface = fuente.render("Nombre de la partida:", True, (0,0,0))
-        ventana.blit(txt_surface, (50, 20))
-        pygame.draw.rect(ventana, color, input_box, 2)
-        txt_surface2 = fuente.render(text, True, (0,0,0))
-        ventana.blit(txt_surface2, (input_box.x+5, input_box.y+8))
-        pygame.draw.rect(ventana, (100,180,100), boton_guardar)
-        txt_guardar = fuente.render("Guardar", True, (255,255,255))
+        draw_gradient(ventana, COLOR_FONDO, (220, 220, 210), ANCHO, ALTO)
+        pygame.draw.rect(ventana, COLOR_FONDO_LISTA, (20, 20, ANCHO-40, ALTO-40), border_radius=16)
+        pygame.draw.rect(ventana, COLOR_BOTON, (20, 20, ANCHO-40, ALTO-40), 2, border_radius=16)
+
+        txt_surface = fuente_titulo.render("Guardar Partida", True, COLOR_BOTON)
+        ventana.blit(txt_surface, (ANCHO//2 - txt_surface.get_width()//2, 28))
+
+        label_surface = fuente.render("Nombre:", True, COLOR_TEXTO)
+        ventana.blit(label_surface, (input_box.x, input_box.y - 32))
+
+        pygame.draw.rect(ventana, color, input_box, border_radius=10)
+        pygame.draw.rect(ventana, COLOR_BOTON, input_box, 2, border_radius=10)
+        txt_surface2 = fuente.render(text, True, COLOR_TEXTO)
+        ventana.blit(txt_surface2, (input_box.x+10, input_box.y+8))
+
+        pygame.draw.rect(ventana, COLOR_BOTON_GUARDAR, boton_guardar, border_radius=12)
+        pygame.draw.rect(ventana, COLOR_BORDE_BOTON_GUARDAR, boton_guardar, 2, border_radius=12)
+        txt_guardar = fuente.render("Guardar", True, COLOR_BOTON_TEXTO)
         ventana.blit(txt_guardar, (boton_guardar.x + boton_guardar.w//2 - txt_guardar.get_width()//2, boton_guardar.y + 8))
+
         pygame.display.flip()
-    
+
     pygame.display.set_mode(main_size)
     return text if text else "SinNombre"
 
@@ -649,8 +677,19 @@ class juegoUI:
         self.mensaje = f"Pista generada"
         self.mensajeTemp = pygame.time.get_ticks()
 
-    # Muestra la pantalla de victoria con estilo coherente
+    # Muestra la pantalla de victoria
     def mostrar_ventana_victoria(self):
+        # Guardar la partida como finalizada antes de mostrar la pantalla de victoria
+        nombre_partida = pedir_nombre_partida(pantalla.get_size())
+        guardar_partida(
+            nombre_archivo="registroPoliPalabras.txt",
+            usuario=usuario_actual,
+            indice=indice_partida,
+            juego=self.juego,
+            tiempo_transcurrido=int(self.tiempoTranscurrido),
+            nombre=nombre_partida,
+            finalizada="SI"
+        )
         ANCHO, ALTO = 700, 480
         ventana = pygame.display.set_mode((ANCHO, ALTO))
         fuente_titulo = pygame.font.Font("dalek_pinpoint/DalekPinpointBold.ttf", 64)
@@ -681,10 +720,10 @@ class juegoUI:
                     sys.exit()
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if boton_menu.collidepoint(event.pos):
-                        pygame.display.set_mode((PANTALLA_ANCHO, PANTALLA_ALTO))
-                        os.system(f"python guiMenu.py {usuario_actual}")
                         pygame.quit()
+                        os.system(f"python guiMenu.py {usuario_actual}")
                         sys.exit()
+
 
 # Función principal del juego
 def main():
@@ -709,7 +748,7 @@ def main():
         juego.letraGenerada = juego.generarLetra()
         juego.generarLetrasJugables()
         juego.obtenerPalabras()
-        juego.disminuirPalabras(2)
+        juego.disminuirPalabras(20)
         juego.guardarLetrasIniciales()
         print(juego.palabras)
     UIjuego = juegoUI(juego)
@@ -729,6 +768,8 @@ def main():
         reloj.tick(60)
         if len(UIjuego.juego.palabrasCorrectas) == len(UIjuego.juego.palabras) and len(UIjuego.juego.palabras) > 0:
             UIjuego.mostrar_ventana_victoria()
+            ejecutando = False
+
     pygame.quit()
     sys.exit()
 

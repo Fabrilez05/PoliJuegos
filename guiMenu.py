@@ -271,6 +271,7 @@ def ventana_mejores_jugadores(juego):
                         continue
                     usuario = None
                     puntaje = None
+                    finalizada = False
                     for line in lineas:
                         if line.startswith("USUARIO:"):
                             usuario = line.split(":",1)[1].strip()
@@ -279,7 +280,9 @@ def ventana_mejores_jugadores(juego):
                                 puntaje = int(line.split(":",1)[1].strip())
                             except:
                                 puntaje = None
-                    if usuario and puntaje is not None:
+                        if line.startswith("FINALIZADA:"):
+                            finalizada = "SI" in line.upper()
+                    if usuario and puntaje is not None and finalizada:
                         puntajes.append((usuario, puntaje))
                 mejores_dict = {}
                 for usuario, puntaje in puntajes:
